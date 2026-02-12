@@ -25,11 +25,15 @@ PATCHED=0
 
 # Patch /tmp references to $PREFIX/tmp
 echo "Patching /tmp references..."
-TMP_FILES=$(grep -rl '"/tmp"' "$OPENCLAW_DIR" --include='*.js' --include='*.mjs' --include='*.cjs' 2>/dev/null || true)
-TMP_FILES2=$(grep -rl "'/tmp'" "$OPENCLAW_DIR" --include='*.js' --include='*.mjs' --include='*.cjs' 2>/dev/null || true)
+TMP_FILES=$(grep -rl '/tmp' "$OPENCLAW_DIR" --include='*.js' --include='*.mjs' --include='*.cjs' 2>/dev/null || true)
 
-for f in $TMP_FILES $TMP_FILES2; do
+for f in $TMP_FILES; do
     if [ -f "$f" ]; then
+        # Patch /tmp/ prefix paths (e.g. "/tmp/openclaw") — must run before exact match
+        sed -i "s|\"\/tmp/|\"$PREFIX/tmp/|g" "$f"
+        sed -i "s|'\/tmp/|'$PREFIX/tmp/|g" "$f"
+        sed -i "s|\`\/tmp/|\`$PREFIX/tmp/|g" "$f"
+        # Patch exact /tmp references (e.g. "/tmp")
         sed -i "s|\"\/tmp\"|\"$PREFIX/tmp\"|g" "$f"
         sed -i "s|'\/tmp'|'$PREFIX/tmp'|g" "$f"
         echo -e "  ${GREEN}[PATCHED]${NC} $f (tmp path)"
