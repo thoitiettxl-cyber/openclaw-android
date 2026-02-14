@@ -137,17 +137,17 @@ openclaw gateway
 
 To keep the gateway running while doing other work, use Termux's **tab** feature. Swipe from left to right on the bottom of the screen to open the tab menu. Tap **NEW SESSION** to add a new tab.
 
-![Termux tab menu](docs/images/termux_menu.png)
+<img src="docs/images/termux_menu.png" width="300" alt="Termux tab menu">
 
 Recommended tab setup:
 
 - **Tab 1**: `openclaw gateway` — Monitor gateway status in real time
 
-![Tab 1 - openclaw gateway](docs/images/termux_tab_1.png)
+<img src="docs/images/termux_tab_1.png" width="300" alt="Tab 1 - openclaw gateway">
 
 - **Tab 2**: `sshd` — Allow SSH access from your computer ([SSH Setup Guide](docs/termux-ssh-guide.md))
 
-![Tab 2 - sshd](docs/images/termux_tab_2.png)
+<img src="docs/images/termux_tab_2.png" width="300" alt="Tab 2 - sshd">
 
 With these two tabs open, the gateway runs stably while you can SSH in from your computer for additional tasks.
 

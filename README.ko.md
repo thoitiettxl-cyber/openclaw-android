@@ -137,17 +137,17 @@ openclaw gateway
 
 게이트웨이를 유지하면서 다른 작업도 하려면 Termux의 **탭** 기능을 활용하세요. 화면 하단을 왼쪽에서 오른쪽으로 스와이프하면 탭 메뉴가 나타납니다. **NEW SESSION**을 눌러 새 탭을 추가할 수 있습니다.
 
-![Termux 탭 메뉴](docs/images/termux_menu.png)
+<img src="docs/images/termux_menu.png" width="300" alt="Termux 탭 메뉴">
 
 권장 탭 구성:
 
 - **탭 1**: `openclaw gateway` — 게이트웨이 상태를 실시간으로 확인
 
-![탭 1 - openclaw gateway](docs/images/termux_tab_1.png)
+<img src="docs/images/termux_tab_1.png" width="300" alt="탭 1 - openclaw gateway">
 
 - **탭 2**: `sshd` — 컴퓨터에서 SSH로 접속하여 명령어 입력 ([SSH 접속 가이드](docs/termux-ssh-guide.ko.md))
 
-![탭 2 - sshd](docs/images/termux_tab_2.png)
+<img src="docs/images/termux_tab_2.png" width="300" alt="탭 2 - sshd">
 
 이렇게 두 탭을 유지해 두면 게이트웨이가 안정적으로 동작하면서, 컴퓨터에서 SSH로 접속하여 추가 작업을 할 수 있습니다.
 
