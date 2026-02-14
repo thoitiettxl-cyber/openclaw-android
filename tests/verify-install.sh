@@ -26,7 +26,7 @@ check_warn() {
     WARN=$((WARN + 1))
 }
 
-echo "=== OpenClaw for Android - Installation Verification ==="
+echo "=== OpenClaw on Android - Installation Verification ==="
 echo ""
 
 # 1. Node.js version
@@ -98,7 +98,7 @@ for DIR in "$HOME/.openclaw-android" "$HOME/.openclaw" "$PREFIX/tmp"; do
 done
 
 # 7. .bashrc contains env block
-if grep -qF "OpenClaw for Android" "$HOME/.bashrc" 2>/dev/null; then
+if grep -qF "OpenClaw on Android" "$HOME/.bashrc" 2>/dev/null; then
     check_pass ".bashrc contains environment block"
 else
     check_fail ".bashrc missing environment block"

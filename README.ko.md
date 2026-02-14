@@ -1,6 +1,6 @@
-# OpenClaw for Android
+# OpenClaw on Android
 
-<img src="docs/images/openclaw_android.jpg" alt="OpenClaw for Android">
+<img src="docs/images/openclaw_android.jpg" alt="OpenClaw on Android">
 
 나야, [OpenClaw](https://github.com/openclaw). 근데,, 이제 Android-Termux 를 곁들인...
 
@@ -15,7 +15,7 @@
 
 ## 리눅스 설치 없이
 
-일반적으로 Android에서 OpenClaw를 실행하려면 proot-distro로 Ubuntu를 설치해야 하고, 700MB~1GB의 저장공간이 필요합니다. OpenClaw for Android는 호환성 문제를 직접 패치하여 순수 Termux 환경에서 OpenClaw를 실행할 수 있게 합니다.
+일반적으로 Android에서 OpenClaw를 실행하려면 proot-distro로 Ubuntu를 설치해야 하고, 700MB~1GB의 저장공간이 필요합니다. OpenClaw on Android는 호환성 문제를 직접 패치하여 순수 Termux 환경에서 OpenClaw를 실행할 수 있게 합니다.
 
 | | 기존 방식 (proot-distro) | 이 프로젝트 |
 |---|---|---|
@@ -246,7 +246,7 @@ Termux에서 필요한 디렉토리 구조를 생성합니다.
 
 `~/.bashrc`에 환경변수 블록을 추가합니다.
 
-- `# >>> OpenClaw for Android >>>` / `# <<< OpenClaw for Android <<<` 마커로 블록을 감싸서 관리
+- `# >>> OpenClaw on Android >>>` / `# <<< OpenClaw on Android <<<` 마커로 블록을 감싸서 관리
 - 이미 블록이 존재하면 기존 블록을 제거하고 새로 추가 (중복 방지)
 - 설정되는 환경변수:
   - `TMPDIR=$PREFIX/tmp` — `/tmp` 대신 Termux 임시 디렉토리 사용

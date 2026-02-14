@@ -1,6 +1,6 @@
-# OpenClaw for Android
+# OpenClaw on Android
 
-<img src="docs/images/openclaw_android.jpg" alt="OpenClaw for Android">
+<img src="docs/images/openclaw_android.jpg" alt="OpenClaw on Android">
 
 Because Android deserves a shell.
 
@@ -15,7 +15,7 @@ An Android phone is a great environment for running an OpenClaw server:
 
 ## No Linux install required
 
-The standard approach to running OpenClaw on Android requires installing proot-distro with Ubuntu, adding 700MB-1GB of overhead. OpenClaw for Android eliminates this by patching compatibility issues directly, letting you run OpenClaw in pure Termux.
+The standard approach to running OpenClaw on Android requires installing proot-distro with Ubuntu, adding 700MB-1GB of overhead. OpenClaw on Android eliminates this by patching compatibility issues directly, letting you run OpenClaw in pure Termux.
 
 | | Standard (proot-distro) | This project |
 |---|---|---|
@@ -246,7 +246,7 @@ Creates the directory structure needed for Termux.
 
 Adds an environment variable block to `~/.bashrc`.
 
-- Wraps the block with `# >>> OpenClaw for Android >>>` / `# <<< OpenClaw for Android <<<` markers for management
+- Wraps the block with `# >>> OpenClaw on Android >>>` / `# <<< OpenClaw on Android <<<` markers for management
 - If the block already exists, removes the old one and adds a fresh one (prevents duplicates)
 - Environment variables set:
   - `TMPDIR=$PREFIX/tmp` — Use Termux temp directory instead of `/tmp`

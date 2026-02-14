@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
 echo -e "${BOLD}========================================${NC}"
-echo -e "${BOLD}  OpenClaw for Android - Installer${NC}"
+echo -e "${BOLD}  OpenClaw on Android - Installer${NC}"
 echo -e "${BOLD}========================================${NC}"
 echo ""
 echo "This script installs OpenClaw on Termux without proot-distro."

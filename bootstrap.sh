@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap.sh - Download and run OpenClaw for Android installer
+# bootstrap.sh - Download and run OpenClaw on Android installer
 # Usage: curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/bootstrap.sh | bash
 set -euo pipefail
 
@@ -12,7 +12,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 echo ""
-echo -e "${BOLD}OpenClaw for Android - Bootstrap${NC}"
+echo -e "${BOLD}OpenClaw on Android - Bootstrap${NC}"
 echo ""
 
 # Ensure curl is available

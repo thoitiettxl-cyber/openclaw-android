@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# uninstall.sh - Remove OpenClaw for Android from Termux
+# uninstall.sh - Remove OpenClaw on Android from Termux
 set -euo pipefail
 
 RED='\033[0;31m'
@@ -10,7 +10,7 @@ NC='\033[0m'
 
 echo ""
 echo -e "${BOLD}========================================${NC}"
-echo -e "${BOLD}  OpenClaw for Android - Uninstaller${NC}"
+echo -e "${BOLD}  OpenClaw on Android - Uninstaller${NC}"
 echo -e "${BOLD}========================================${NC}"
 echo ""
 
@@ -42,8 +42,8 @@ fi
 
 # 3. Remove environment block from .bashrc
 BASHRC="$HOME/.bashrc"
-MARKER_START="# >>> OpenClaw for Android >>>"
-MARKER_END="# <<< OpenClaw for Android <<<"
+MARKER_START="# >>> OpenClaw on Android >>>"
+MARKER_END="# <<< OpenClaw on Android <<<"
 
 if [ -f "$BASHRC" ] && grep -qF "$MARKER_START" "$BASHRC"; then
     sed -i "/${MARKER_START//\//\\/}/,/${MARKER_END//\//\\/}/d" "$BASHRC"
