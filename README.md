@@ -1,12 +1,21 @@
 # OpenClaw for Android
 
+<img src="docs/images/openclaw_android.jpg" alt="OpenClaw for Android">
+
 Run [OpenClaw](https://github.com/openclaw) on Android using Termux — **without proot-distro**.
 
 ## Why?
 
+An Android phone is a great environment for running an OpenClaw server:
+
+- **Sufficient performance** — Even models from a few years ago have more than enough specs to run OpenClaw
+- **Repurpose old phones** — Put that phone sitting in your drawer to good use. No need to buy a mini PC
+- **Low power** — Runs 24/7 on a fraction of the power a PC would consume
+- **Easy sandbox** — Install OpenClaw on a factory-reset phone with no accounts logged in, and you have a clean, isolated environment
+
 The standard approach to running OpenClaw on Android requires installing proot-distro with Ubuntu, adding 700MB-1GB of overhead. OpenClaw for Android eliminates this by patching compatibility issues directly, letting you run OpenClaw in pure Termux.
 
-| | Standard (proot-distro) | Lite (this project) |
+| | Standard (proot-distro) | This project |
 |---|---|---|
 | Storage overhead | 700MB - 1GB | ~50MB |
 | Setup time | 10-15 min | 3-5 min |
@@ -155,27 +164,22 @@ With these two tabs open, the gateway runs stably while you can SSH in from your
 
 ## What It Does
 
-The installer handles 5 compatibility issues between Termux and standard Linux:
+The installer automatically resolves the differences between Termux and standard Linux. There's nothing you need to do manually — the single install command handles all 5 of these:
 
-1. **Android platform detection** — Node.js reports `process.platform` as `'android'` in Termux, causing OpenClaw to reject the platform. A preloaded JS shim overrides it to `'linux'`.
-
-2. **Bionic libc crash** — `os.networkInterfaces()` crashes on Android's Bionic libc. The same preloaded shim wraps it in try-catch with a safe fallback.
-
-3. **Hardcoded system paths** — Node packages expect `/bin/sh`, `/tmp`, etc. The installer patches these to use Termux's `$PREFIX` paths.
-
-4. **No `/tmp` access** — Android blocks writes to `/tmp`. Redirected to `$PREFIX/tmp`.
-
-5. **No systemd** — Some install steps check for systemd. The `CONTAINER=1` env var bypasses these checks.
+1. **Platform recognition** — Configures Android to be recognized as Linux
+2. **Network error prevention** — Automatically works around network-related crashes on Android
+3. **Path conversion** — Automatically converts standard Linux paths to Termux paths
+4. **Temp folder setup** — Automatically configures an accessible temp folder for Android
+5. **Service manager bypass** — Configures normal operation without systemd
 
 ## Performance
 
-CLI commands like `openclaw status` may feel slower compared to a PC. This delay occurs during Node.js cold start, when hundreds of JS files are read from disk and parsed. The main causes are:
+CLI commands like `openclaw status` may feel slower than on a PC. This is because each command needs to read many files, and the phone's storage is slower than a PC's, with Android's security processing adding overhead.
 
-- **Random read performance** — Reading hundreds of small files sequentially is limited by IOPS, where mobile UFS storage is slower than PC NVMe SSDs
-- **Android file encryption** — Android encrypts the entire filesystem (FBE), adding decryption overhead on every file read
-- **App sandbox** — Termux runs inside `/data/data/`, passing through Android's security layers
+However, **once the gateway is running, there's no difference**. The process stays in memory so files don't need to be re-read, and AI responses are processed on external servers — the same speed as on a PC.
 
-However, once the gateway is running, the Node.js process stays in memory with no further cold starts. AI response speed is processed on external servers, so it's the same as on a PC.
+<details>
+<summary>Technical Documentation for Developers</summary>
 
 ## Project Structure
 
@@ -283,6 +287,8 @@ Checks 7 items to confirm installation completed successfully.
 | .bashrc | Contains environment variable block |
 
 All items pass → PASSED. Any failure → FAILED with reinstall instructions.
+
+</details>
 
 ## Uninstall
 

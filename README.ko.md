@@ -1,12 +1,21 @@
 # OpenClaw for Android
 
+<img src="docs/images/openclaw_android.jpg" alt="OpenClaw for Android">
+
 [OpenClaw](https://github.com/openclaw)를 Android Termux에서 실행 — **proot-distro 없이**.
 
 ## 왜 만들었나?
 
+안드로이드 폰은 OpenClaw 서버를 돌리기에 좋은 환경입니다:
+
+- **충분한 성능** — 최신 폰은 물론, 몇 년 전 모델도 OpenClaw을 구동하기에 충분한 사양을 갖추고 있습니다
+- **남는 폰 재활용** — 서랍에 굴러다니는 폰을 활용할 수 있습니다. 미니PC를 따로 구매할 필요가 없습니다
+- **저전력** — PC 대비 아주 적은 전력으로 24시간 운영이 가능합니다
+- **간편한 샌드박스** — 초기화된 폰에 아무런 계정 정보 없이 OpenClaw만 설치하면, 격리된 환경에서 안전하게 운영할 수 있습니다
+
 기존 방식으로 Android에서 OpenClaw를 실행하려면 proot-distro로 Ubuntu를 설치해야 하고, 700MB~1GB의 저장공간이 필요합니다. OpenClaw for Android는 호환성 문제를 직접 패치하여 순수 Termux 환경에서 OpenClaw를 실행할 수 있게 합니다.
 
-| | 기존 방식 (proot-distro) | Lite (이 프로젝트) |
+| | 기존 방식 (proot-distro) | 이 프로젝트 |
 |---|---|---|
 | 저장공간 오버헤드 | 700MB - 1GB | ~50MB |
 | 설치 시간 | 10-15분 | 3-5분 |
@@ -155,27 +164,22 @@ openclaw gateway
 
 ## 동작 원리
 
-설치 스크립트는 Termux와 표준 Linux 간의 5가지 호환성 문제를 해결합니다:
+설치 스크립트는 Termux와 일반 Linux 환경의 차이를 자동으로 해결합니다. 사용자가 직접 할 일은 없으며, 설치 명령어 하나로 아래 5가지가 모두 처리됩니다:
 
-1. **Android 플랫폼 감지** — Termux에서 Node.js의 `process.platform`이 `'android'`를 반환하여 OpenClaw가 플랫폼을 거부합니다. 사전 로드되는 JS 심(shim)이 이를 `'linux'`로 오버라이드합니다.
-
-2. **Bionic libc 크래시** — Android Bionic의 `getifaddrs()` 제한으로 `os.networkInterfaces()`가 크래시합니다. 같은 JS 심이 try-catch로 감싸서 안전한 폴백을 반환합니다.
-
-3. **하드코딩된 시스템 경로** — Node 패키지가 `/bin/sh`, `/tmp` 등의 표준 경로를 기대합니다. 설치 스크립트가 이를 Termux의 `$PREFIX` 경로로 패치합니다.
-
-4. **`/tmp` 접근 불가** — Android가 `/tmp` 쓰기를 차단합니다. `$PREFIX/tmp`로 리다이렉트합니다.
-
-5. **systemd 부재** — 일부 설치 과정에서 systemd를 확인합니다. `CONTAINER=1` 환경변수로 이 검사를 우회합니다.
+1. **플랫폼 인식** — Android를 Linux로 인식하도록 설정
+2. **네트워크 관련 오류 방지** — Android 환경에서 발생하는 네트워크 관련 크래시를 자동 우회
+3. **경로 변환** — 일반 Linux 경로를 Termux 경로로 자동 변환
+4. **임시 폴더 설정** — Android에서 접근 가능한 임시 폴더로 자동 설정
+5. **서비스 관리자 우회** — systemd 없이도 정상 동작하도록 설정
 
 ## 성능
 
-`openclaw status` 등 CLI 명령어 실행 시 PC 대비 체감 지연이 있을 수 있습니다. 이는 Node.js 프로세스가 시작될 때(cold start) 수백 개의 JS 파일을 디스크에서 읽고 파싱하는 과정에서 발생하며, 주요 원인은 다음과 같습니다:
+`openclaw status` 같은 명령어는 PC보다 느리게 느껴질 수 있습니다. 이는 명령어를 실행할 때마다 많은 파일을 읽어야 하는데, 폰의 저장장치가 PC보다 느리고 Android의 보안 처리가 추가되기 때문입니다.
 
-- **랜덤 읽기 성능 차이** — 소규모 파일을 순차적으로 수백 번 읽는 패턴에서 PC의 NVMe SSD 대비 모바일 UFS 스토리지의 IOPS가 낮음
-- **Android 파일 암호화** — Android는 파일 시스템 전체를 암호화(FBE)하며, 매 파일 읽기마다 복호화 오버헤드 발생
-- **앱 샌드박스** — Termux가 `/data/data/` 내에서 동작하면서 Android 보안 레이어를 거침
+단, **게이트웨이가 실행된 이후에는 차이가 없습니다**. 프로세스가 메모리에 상주하므로 파일을 다시 읽지 않고, AI 응답은 외부 서버에서 처리되므로 PC와 동일한 속도입니다.
 
-단, 게이트웨이가 실행된 이후에는 Node.js 프로세스가 메모리에 상주하므로 cold start가 없습니다. AI 응답 속도는 외부 서버에서 처리되기 때문에 PC와 동일합니다.
+<details>
+<summary>개발자용 기술 문서</summary>
 
 ## 프로젝트 구조
 
@@ -283,6 +287,8 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 | .bashrc | 환경변수 블록 포함 |
 
 모든 항목 통과 시 PASSED, 하나라도 실패 시 FAILED를 출력하고 재설치를 안내합니다.
+
+</details>
 
 ## 제거
 
