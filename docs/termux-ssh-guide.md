@@ -35,7 +35,7 @@ Retype new password: 1234   ← type the same password again
 
 > **Important**: Run `sshd` directly in the Termux app on your phone, not via SSH.
 
-If the gateway is already running in Tab 1, you'll need a new tab. Swipe from left to right on the bottom of the Termux screen to open the tab menu, then tap **NEW SESSION**.
+If the gateway is already running in Tab 1, you'll need a new tab. Tap the **hamburger icon (☰)** on the bottom menu bar, or swipe right from the left edge of the screen (above the bottom menu bar) to open the side menu. Then tap **NEW SESSION**.
 
 <img src="images/termux_menu.png" width="300" alt="Termux tab menu">
 
@@ -89,4 +89,3 @@ Once connected, you'll see the Termux `$` prompt. From now on, you can type all 
 
 - Termux uses SSH port **8022** (not the standard Linux port 22)
 - If you close the Termux app, the SSH server stops. To reconnect, open Termux on the phone and run `sshd`
-- To start sshd automatically, add `sshd 2>/dev/null` to the end of your `~/.bashrc` file so the SSH server starts whenever Termux opens

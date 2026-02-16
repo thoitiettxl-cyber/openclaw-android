@@ -141,19 +141,7 @@ Once setup is complete, start the gateway:
 openclaw gateway
 ```
 
-To keep the gateway running while doing other work, use Termux's **tab** feature. Swipe from left to right on the bottom of the screen to open the tab menu. Tap **NEW SESSION** to add a new tab.
-
-<img src="docs/images/termux_menu.png" width="300" alt="Termux tab menu">
-
-Recommended tab setup:
-
-- **Tab 1**: `openclaw gateway` — Run the gateway
-
-<img src="docs/images/termux_tab_1.png" width="300" alt="Tab 1 - openclaw gateway">
-
-- **Tab 2**: General purpose — Run other commands as needed
-
-> To stop the gateway, press `Ctrl+C` in Tab 1. Do not use `Ctrl+Z` — it only suspends the process without terminating it. Always use `Ctrl+C`.
+> To stop the gateway, press `Ctrl+C`. Do not use `Ctrl+Z` — it only suspends the process without terminating it.
 
 ### Step 7: Access the Dashboard from Your PC
 

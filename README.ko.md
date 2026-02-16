@@ -141,19 +141,7 @@ openclaw onboard
 openclaw gateway
 ```
 
-게이트웨이를 유지하면서 다른 작업도 하려면 Termux의 **탭** 기능을 활용하세요. 화면 하단을 왼쪽에서 오른쪽으로 스와이프하면 탭 메뉴가 나타납니다. **NEW SESSION**을 눌러 새 탭을 추가할 수 있습니다.
-
-<img src="docs/images/termux_menu.png" width="300" alt="Termux 탭 메뉴">
-
-권장 탭 구성:
-
-- **탭 1**: `openclaw gateway` — 게이트웨이 실행
-
-<img src="docs/images/termux_tab_1.png" width="300" alt="탭 1 - openclaw gateway">
-
-- **탭 2**: 범용 — 필요한 명령어 실행
-
-> 게이트웨이를 중지하려면 탭 1에서 `Ctrl+C`를 누르세요. `Ctrl+Z`는 프로세스를 종료하지 않고 일시 중지만 시키므로, 반드시 `Ctrl+C`를 사용하세요.
+> 게이트웨이를 중지하려면 `Ctrl+C`를 누르세요. `Ctrl+Z`는 프로세스를 종료하지 않고 일시 중지만 시키므로, 반드시 `Ctrl+C`를 사용하세요.
 
 ### 7단계: PC에서 대시보드 접속
 
