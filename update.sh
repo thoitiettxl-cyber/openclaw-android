@@ -43,8 +43,19 @@ if ! command -v openclaw &>/dev/null; then
 fi
 echo -e "${GREEN}[OK]${NC}   openclaw $(openclaw --version 2>/dev/null || echo "")"
 
-# Create directory if it doesn't exist (older installations may not have it)
-mkdir -p "$OPENCLAW_DIR"
+# Migrate from old directory name (.openclaw-lite → .openclaw-android)
+OLD_DIR="$HOME/.openclaw-lite"
+if [ -d "$OLD_DIR" ] && [ ! -d "$OPENCLAW_DIR" ]; then
+    mv "$OLD_DIR" "$OPENCLAW_DIR"
+    echo -e "${GREEN}[OK]${NC}   Migrated $OLD_DIR → $OPENCLAW_DIR"
+elif [ -d "$OLD_DIR" ] && [ -d "$OPENCLAW_DIR" ]; then
+    # Both exist — merge old into new, then remove old
+    cp -rn "$OLD_DIR"/. "$OPENCLAW_DIR"/ 2>/dev/null || true
+    rm -rf "$OLD_DIR"
+    echo -e "${GREEN}[OK]${NC}   Merged $OLD_DIR into $OPENCLAW_DIR"
+else
+    mkdir -p "$OPENCLAW_DIR"
+fi
 
 # Check curl
 if ! command -v curl &>/dev/null; then
