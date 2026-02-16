@@ -137,11 +137,36 @@ Follow the on-screen instructions to complete the initial setup.
 
 ### Step 6: Start the Gateway and Set Up Termux Tabs
 
-Once setup is complete, start the gateway. Running it directly on the phone's Termux is the most stable approach.
+Once setup is complete, start the gateway with the following command. It automatically sets up LAN dashboard access so you can open the dashboard from your PC browser.
 
 ```bash
-openclaw gateway
+oca-gateway
 ```
+
+> If you get `command not found`, run the [update command](#update) first.
+
+When the gateway starts, the script displays a PC-accessible URL like this:
+
+```
+══════════════════════════════════════════════════
+  PC Dashboard Access
+══════════════════════════════════════════════════
+
+  After the gateway starts, look for the Dashboard URL
+  in the output below. Replace the URL like this:
+
+  Before: http://127.0.0.1:18789/#token=YOUR_TOKEN
+  After:  http://192.168.0.100:18790/#token=YOUR_TOKEN
+
+  Open the After URL in your PC browser and bookmark it.
+══════════════════════════════════════════════════
+```
+
+Open the **After** URL in your PC browser and **bookmark it** for easy access. No SSH tunnel needed.
+
+> `oca-gateway` (**O**pen**C**law on **A**ndroid) runs `socat` in the background to forward port 18790 (LAN) to 18789 (localhost), then starts `openclaw gateway`. When you stop the gateway with `Ctrl+C`, socat is automatically cleaned up. This is a convenience command provided by this project — not an `openclaw` built-in.
+>
+> If you don't need PC access, you can still use `openclaw gateway` directly.
 
 To keep the gateway running while doing other work, use Termux's **tab** feature. Swipe from left to right on the bottom of the screen to open the tab menu. Tap **NEW SESSION** to add a new tab.
 
@@ -149,7 +174,7 @@ To keep the gateway running while doing other work, use Termux's **tab** feature
 
 Recommended tab setup:
 
-- **Tab 1**: `openclaw gateway` — Monitor gateway status in real time
+- **Tab 1**: `oca-gateway` — Gateway + LAN dashboard access
 
 <img src="docs/images/termux_tab_1.png" width="300" alt="Tab 1 - openclaw gateway">
 
@@ -195,7 +220,8 @@ openclaw-android/
 │   ├── check-env.sh            # Pre-flight environment check
 │   ├── install-deps.sh         # Install Termux packages
 │   ├── setup-env.sh            # Configure environment variables
-│   └── setup-paths.sh          # Create directories and symlinks
+│   ├── setup-paths.sh          # Create directories and symlinks
+│   └── gateway-start.sh        # Start gateway with LAN dashboard access
 ├── tests/
 │   └── verify-install.sh       # Post-install verification
 └── docs/
@@ -236,6 +262,7 @@ Installs Termux packages required for building and running OpenClaw.
 | `cmake` | Cross-platform build system | Some native modules use CMake-based builds instead of Makefiles. Cryptography-related libraries (`argon2`, etc.) often include CMakeLists.txt |
 | `clang` | C/C++ compiler | Default C/C++ compiler in Termux. Used by `node-gyp` to compile C/C++ source of native modules. Termux uses Clang as standard instead of GCC |
 | `tmux` | Terminal multiplexer | Allows running the OpenClaw server in a background session. In Termux, apps going to background may suspend processes, so running inside a tmux session keeps it stable |
+| `socat` | Network relay tool | Used by `oca-gateway` to forward the dashboard port to LAN, allowing PC browser access without SSH tunnels |
 
 - After installation, verifies Node.js >= 22 and npm presence. Exits on failure
 
@@ -298,6 +325,16 @@ All items pass → PASSED. Any failure → FAILED with reinstall instructions.
 Runs `openclaw update` to ensure the latest version. On completion, displays the OpenClaw version and instructs the user to run `openclaw onboard` to start setup.
 
 </details>
+
+## Update
+
+If you installed before and want to get the latest features (e.g., `oca-gateway`), run:
+
+```bash
+curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash && source ~/.bashrc
+```
+
+This is a lightweight update that downloads only what's needed — no reinstall required.
 
 ## Uninstall
 

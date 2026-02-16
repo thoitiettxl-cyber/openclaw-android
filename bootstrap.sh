@@ -35,7 +35,9 @@ FILES=(
     "scripts/install-deps.sh"
     "scripts/setup-paths.sh"
     "scripts/setup-env.sh"
+    "scripts/gateway-start.sh"
     "tests/verify-install.sh"
+    "update.sh"
 )
 
 # Download all files
@@ -67,9 +69,12 @@ echo ""
 # Run installer
 bash "$INSTALL_DIR/install.sh"
 
-# Keep uninstall.sh accessible, clean up the rest
+# Keep uninstall.sh and update.sh accessible, clean up the rest
 cp "$INSTALL_DIR/uninstall.sh" "$HOME/.openclaw-android/uninstall.sh"
 chmod +x "$HOME/.openclaw-android/uninstall.sh"
+cp "$INSTALL_DIR/update.sh" "$HOME/.openclaw-android/update.sh"
+chmod +x "$HOME/.openclaw-android/update.sh"
 rm -rf "$INSTALL_DIR"
 
 echo "Uninstaller saved at: ~/.openclaw-android/uninstall.sh"
+echo "Updater saved at:     ~/.openclaw-android/update.sh"

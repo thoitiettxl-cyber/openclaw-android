@@ -23,6 +23,7 @@ PACKAGES=(
     cmake
     clang
     tmux
+    socat
 )
 
 echo "Installing packages: ${PACKAGES[*]}"
