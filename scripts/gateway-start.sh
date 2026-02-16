@@ -52,36 +52,51 @@ SOCAT_PID=$!
 echo -e "${GREEN}[OK]${NC}   socat started (port ${SOCAT_PORT} → 18789)"
 echo ""
 
-if [ -n "$PHONE_IP" ] && [ -n "$DASHBOARD_TOKEN" ]; then
-    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
-    echo -e "${BOLD}  PC Dashboard Access${NC}"
-    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+# Display PC Dashboard Access info
+show_dashboard_info() {
+    if [ -n "$PHONE_IP" ] && [ -n "$DASHBOARD_TOKEN" ]; then
+        echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+        echo -e "${BOLD}  PC Dashboard Access${NC}"
+        echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "  Open this URL in your PC browser and bookmark it:"
+        echo ""
+        echo -e "  ${GREEN}http://${PHONE_IP}:${SOCAT_PORT}/#token=${DASHBOARD_TOKEN}${NC}"
+        echo ""
+        echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+    elif [ -n "$PHONE_IP" ]; then
+        echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+        echo -e "${BOLD}  PC Dashboard Access${NC}"
+        echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "  After the gateway starts, look for the Dashboard URL"
+        echo -e "  in the output below. Replace the URL like this:"
+        echo ""
+        echo -e "  ${YELLOW}Before:${NC} http://127.0.0.1:18789/#token=YOUR_TOKEN"
+        echo -e "  ${GREEN}After:${NC}  http://${PHONE_IP}:${SOCAT_PORT}/#token=YOUR_TOKEN"
+        echo ""
+        echo -e "  Open the ${GREEN}After${NC} URL in your PC browser and bookmark it."
+        echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+    else
+        echo -e "${YELLOW}[WARN]${NC} Could not detect Wi-Fi IP. Run 'ifconfig wlan0' to find it."
+    fi
+}
+
+show_dashboard_info
+
+# Check if gateway is already running
+GATEWAY_OUTPUT=$(openclaw gateway 2>&1) || true
+
+if echo "$GATEWAY_OUTPUT" | grep -q "already running"; then
     echo ""
-    echo -e "  Open this URL in your PC browser and bookmark it:"
+    echo -e "${YELLOW}[INFO]${NC} Gateway is already running."
     echo ""
-    echo -e "  ${GREEN}http://${PHONE_IP}:${SOCAT_PORT}/#token=${DASHBOARD_TOKEN}${NC}"
+    echo "To restart: openclaw gateway stop && oca-gateway"
+    echo "Press Ctrl+C to stop socat."
     echo ""
-    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
-elif [ -n "$PHONE_IP" ]; then
-    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
-    echo -e "${BOLD}  PC Dashboard Access${NC}"
-    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
-    echo ""
-    echo -e "  After the gateway starts, look for the Dashboard URL"
-    echo -e "  in the output below. Replace the URL like this:"
-    echo ""
-    echo -e "  ${YELLOW}Before:${NC} http://127.0.0.1:18789/#token=YOUR_TOKEN"
-    echo -e "  ${GREEN}After:${NC}  http://${PHONE_IP}:${SOCAT_PORT}/#token=YOUR_TOKEN"
-    echo ""
-    echo -e "  Open the ${GREEN}After${NC} URL in your PC browser and bookmark it."
-    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+    # Keep socat alive until user presses Ctrl+C
+    wait "$SOCAT_PID" 2>/dev/null || true
 else
-    echo -e "${YELLOW}[WARN]${NC} Could not detect Wi-Fi IP. Run 'ifconfig wlan0' to find it."
+    echo ""
+    echo "$GATEWAY_OUTPUT"
 fi
-
-echo ""
-echo "Starting OpenClaw gateway..."
-echo ""
-
-# Start gateway (foreground — Ctrl+C stops both gateway and socat)
-openclaw gateway
