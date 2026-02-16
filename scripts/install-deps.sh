@@ -24,6 +24,7 @@ PACKAGES=(
     clang
     tmux
     socat
+    openssl-tool
 )
 
 echo "Installing packages: ${PACKAGES[*]}"

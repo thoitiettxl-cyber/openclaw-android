@@ -145,22 +145,25 @@ oca-gateway
 
 > If you get `command not found`, run the [update command](#update) first.
 
-The script automatically detects your phone's IP and dashboard token, then displays a ready-to-use URL:
+The script automatically generates a self-signed HTTPS certificate, detects your phone's IP and dashboard token, then displays a ready-to-use URL:
 
 ```
 ══════════════════════════════════════════════════
-  PC Dashboard Access
+  PC Dashboard Access (HTTPS)
 ══════════════════════════════════════════════════
 
   Open this URL in your PC browser and bookmark it:
 
-  http://192.168.0.100:18790/#token=40db0363...
+  https://192.168.0.100:18790/#token=40db0363...
+
+  Your browser will show a certificate warning on first
+  visit — click Advanced → Proceed to accept it.
 ══════════════════════════════════════════════════
 ```
 
-Open this URL in your PC browser and **bookmark it** for easy access. No SSH tunnel needed.
+Open this URL in your PC browser and **bookmark it** for easy access. No SSH tunnel needed. Your browser will show a certificate warning on first visit because it's a self-signed certificate — click **Advanced** → **Proceed** to accept it (one-time only).
 
-> `oca-gateway` (**O**pen**C**law on **A**ndroid) runs `socat` in the background to forward port 18790 (LAN) to 18789 (localhost), then starts `openclaw gateway`. When you stop the gateway with `Ctrl+C`, socat is automatically cleaned up. This is a convenience command provided by this project — not an `openclaw` built-in.
+> `oca-gateway` (**O**pen**C**law on **A**ndroid) runs `socat` with HTTPS in the background to forward port 18790 (LAN) to 18789 (localhost), then starts `openclaw gateway`. When you stop the gateway with `Ctrl+C`, socat is automatically cleaned up. This is a convenience command provided by this project — not an `openclaw` built-in.
 >
 > If you don't need PC access, you can still use `openclaw gateway` directly.
 
@@ -258,7 +261,8 @@ Installs Termux packages required for building and running OpenClaw.
 | `cmake` | Cross-platform build system | Some native modules use CMake-based builds instead of Makefiles. Cryptography-related libraries (`argon2`, etc.) often include CMakeLists.txt |
 | `clang` | C/C++ compiler | Default C/C++ compiler in Termux. Used by `node-gyp` to compile C/C++ source of native modules. Termux uses Clang as standard instead of GCC |
 | `tmux` | Terminal multiplexer | Allows running the OpenClaw server in a background session. In Termux, apps going to background may suspend processes, so running inside a tmux session keeps it stable |
-| `socat` | Network relay tool | Used by `oca-gateway` to forward the dashboard port to LAN, allowing PC browser access without SSH tunnels |
+| `socat` | Network relay tool | Used by `oca-gateway` to forward the dashboard port to LAN over HTTPS, allowing PC browser access without SSH tunnels |
+| `openssl-tool` | TLS/SSL toolkit | Used by `oca-gateway` to generate a self-signed HTTPS certificate for secure LAN dashboard access |
 
 - After installation, verifies Node.js >= 22 and npm presence. Exits on failure
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gateway-start.sh - Start OpenClaw gateway with LAN dashboard access via socat
+# gateway-start.sh - Start OpenClaw gateway with HTTPS LAN dashboard access via socat
 set -euo pipefail
 
 RED='\033[0;31m'
@@ -10,6 +10,9 @@ NC='\033[0m'
 
 SOCAT_PORT=18790
 SOCAT_PID=""
+CERT_DIR="$HOME/.openclaw-android/certs"
+CERT_FILE="$CERT_DIR/cert.pem"
+KEY_FILE="$CERT_DIR/key.pem"
 
 cleanup() {
     if [ -n "$SOCAT_PID" ] && kill -0 "$SOCAT_PID" 2>/dev/null; then
@@ -27,6 +30,24 @@ if ! command -v socat &>/dev/null; then
     exit 1
 fi
 
+# Check openssl
+if ! command -v openssl &>/dev/null; then
+    echo -e "${RED}[FAIL]${NC} openssl not found. Install it with: pkg install openssl-tool"
+    exit 1
+fi
+
+# Generate self-signed certificate if not exists
+if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+    echo "Generating self-signed certificate..."
+    mkdir -p "$CERT_DIR"
+    openssl req -x509 -newkey rsa:2048 \
+        -keyout "$KEY_FILE" -out "$CERT_FILE" \
+        -days 365 -nodes -subj '/CN=openclaw' 2>/dev/null
+    echo -e "${GREEN}[OK]${NC}   Certificate generated (valid for 365 days)"
+else
+    echo -e "${GREEN}[OK]${NC}   Certificate found"
+fi
+
 # Get phone's Wi-Fi IP
 # Note: `ifconfig wlan0` fails in Termux (Permission denied), but `ifconfig` (all) works
 PHONE_IP=""
@@ -41,45 +62,58 @@ if [ -n "$DASHBOARD_OUTPUT" ]; then
     DASHBOARD_TOKEN=$(echo "$DASHBOARD_OUTPUT" | sed -n 's/.*#token=\([a-f0-9]*\).*/\1/p' | head -1) || true
 fi
 
-# Start socat in background
 # Kill any existing socat on the same port
-if command -v fuser &>/dev/null; then
-    fuser -k "${SOCAT_PORT}/tcp" 2>/dev/null || true
+pkill -f "socat.*OPENSSL-LISTEN:${SOCAT_PORT}" 2>/dev/null || true
+sleep 0.5
+
+# Start socat with HTTPS in background
+socat OPENSSL-LISTEN:${SOCAT_PORT},fork,reuseaddr,cert=${CERT_FILE},key=${KEY_FILE},verify=0 TCP:127.0.0.1:18789 &
+SOCAT_PID=$!
+sleep 0.5
+
+# Check if socat started successfully
+if ! kill -0 "$SOCAT_PID" 2>/dev/null; then
+    echo -e "${RED}[FAIL]${NC} socat failed to start. Port ${SOCAT_PORT} may be in use."
+    echo "       Try: pkill -9 socat; oca-gateway"
+    SOCAT_PID=""
+    exit 1
 fi
 
-socat TCP-LISTEN:${SOCAT_PORT},fork,bind=0.0.0.0,reuseaddr TCP:127.0.0.1:18789 &
-SOCAT_PID=$!
-
-echo -e "${GREEN}[OK]${NC}   socat started (port ${SOCAT_PORT} → 18789)"
+echo -e "${GREEN}[OK]${NC}   socat HTTPS started (port ${SOCAT_PORT} → 18789)"
 echo ""
 
 # Display PC Dashboard Access info
 show_dashboard_info() {
     if [ -n "$PHONE_IP" ] && [ -n "$DASHBOARD_TOKEN" ]; then
         echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
-        echo -e "${BOLD}  PC Dashboard Access${NC}"
+        echo -e "${BOLD}  PC Dashboard Access (HTTPS)${NC}"
         echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
         echo ""
         echo -e "  Open this URL in your PC browser and bookmark it:"
         echo ""
-        echo -e "  ${GREEN}http://${PHONE_IP}:${SOCAT_PORT}/#token=${DASHBOARD_TOKEN}${NC}"
+        echo -e "  ${GREEN}https://${PHONE_IP}:${SOCAT_PORT}/#token=${DASHBOARD_TOKEN}${NC}"
+        echo ""
+        echo -e "  Your browser will show a certificate warning on first"
+        echo -e "  visit — click ${BOLD}Advanced${NC} → ${BOLD}Proceed${NC} to accept it."
         echo ""
         echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
     elif [ -n "$PHONE_IP" ]; then
         echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
-        echo -e "${BOLD}  PC Dashboard Access${NC}"
+        echo -e "${BOLD}  PC Dashboard Access (HTTPS)${NC}"
         echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
         echo ""
         echo -e "  After the gateway starts, look for the Dashboard URL"
         echo -e "  in the output below. Replace the URL like this:"
         echo ""
         echo -e "  ${YELLOW}Before:${NC} http://127.0.0.1:18789/#token=YOUR_TOKEN"
-        echo -e "  ${GREEN}After:${NC}  http://${PHONE_IP}:${SOCAT_PORT}/#token=YOUR_TOKEN"
+        echo -e "  ${GREEN}After:${NC}  https://${PHONE_IP}:${SOCAT_PORT}/#token=YOUR_TOKEN"
         echo ""
-        echo -e "  Open the ${GREEN}After${NC} URL in your PC browser and bookmark it."
+        echo -e "  Your browser will show a certificate warning on first"
+        echo -e "  visit — click ${BOLD}Advanced${NC} → ${BOLD}Proceed${NC} to accept it."
+        echo ""
         echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
     else
-        echo -e "${YELLOW}[WARN]${NC} Could not detect Wi-Fi IP. Run 'ifconfig wlan0' to find it."
+        echo -e "${YELLOW}[WARN]${NC} Could not detect Wi-Fi IP. Run 'ifconfig' to find it."
     fi
 }
 

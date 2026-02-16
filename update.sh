@@ -75,6 +75,15 @@ else
     echo -e "${GREEN}[OK]${NC}   socat installed"
 fi
 
+# Install openssl-tool if not present
+if command -v openssl &>/dev/null; then
+    echo -e "${YELLOW}[SKIP]${NC} openssl already installed"
+else
+    echo "Installing openssl-tool..."
+    pkg install -y openssl-tool
+    echo -e "${GREEN}[OK]${NC}   openssl-tool installed"
+fi
+
 # ─────────────────────────────────────────────
 step 3 "Downloading New Scripts"
 
