@@ -33,6 +33,13 @@ if command -v ifconfig &>/dev/null; then
     PHONE_IP=$(ifconfig wlan0 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1) || true
 fi
 
+# Get dashboard URL (extract token from openclaw dashboard output)
+DASHBOARD_TOKEN=""
+DASHBOARD_OUTPUT=$(openclaw dashboard 2>/dev/null) || true
+if [ -n "$DASHBOARD_OUTPUT" ]; then
+    DASHBOARD_TOKEN=$(echo "$DASHBOARD_OUTPUT" | sed -n 's/.*#token=\([a-f0-9]*\).*/\1/p' | head -1) || true
+fi
+
 # Start socat in background
 # Kill any existing socat on the same port
 if command -v fuser &>/dev/null; then
@@ -45,7 +52,17 @@ SOCAT_PID=$!
 echo -e "${GREEN}[OK]${NC}   socat started (port ${SOCAT_PORT} → 18789)"
 echo ""
 
-if [ -n "$PHONE_IP" ]; then
+if [ -n "$PHONE_IP" ] && [ -n "$DASHBOARD_TOKEN" ]; then
+    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}  PC Dashboard Access${NC}"
+    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  Open this URL in your PC browser and bookmark it:"
+    echo ""
+    echo -e "  ${GREEN}http://${PHONE_IP}:${SOCAT_PORT}/#token=${DASHBOARD_TOKEN}${NC}"
+    echo ""
+    echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
+elif [ -n "$PHONE_IP" ]; then
     echo -e "${BOLD}══════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}  PC Dashboard Access${NC}"
     echo -e "${BOLD}══════════════════════════════════════════════════${NC}"

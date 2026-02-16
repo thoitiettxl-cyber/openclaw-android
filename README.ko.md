@@ -145,24 +145,20 @@ oca-gateway
 
 > `command not found` 오류가 나오면 [업데이트 명령어](#업데이트)를 먼저 실행하세요.
 
-게이트웨이가 시작되면 PC에서 접속 가능한 URL이 표시됩니다:
+스크립트가 폰의 IP와 대시보드 토큰을 자동으로 감지하여 바로 접속 가능한 URL을 표시합니다:
 
 ```
 ══════════════════════════════════════════════════
   PC Dashboard Access
 ══════════════════════════════════════════════════
 
-  After the gateway starts, look for the Dashboard URL
-  in the output below. Replace the URL like this:
+  Open this URL in your PC browser and bookmark it:
 
-  Before: http://127.0.0.1:18789/#token=YOUR_TOKEN
-  After:  http://192.168.0.100:18790/#token=YOUR_TOKEN
-
-  Open the After URL in your PC browser and bookmark it.
+  http://192.168.0.100:18790/#token=40db0363...
 ══════════════════════════════════════════════════
 ```
 
-**After** URL을 PC 브라우저에서 열고 **즐겨찾기에 등록**해 두면 언제든 바로 접속할 수 있습니다. SSH 터널이 필요 없습니다.
+이 URL을 PC 브라우저에서 열고 **즐겨찾기에 등록**해 두면 언제든 바로 접속할 수 있습니다. SSH 터널이 필요 없습니다.
 
 > `oca-gateway`(**O**pen**C**law on **A**ndroid)는 `socat`을 백그라운드로 실행하여 18790 포트(LAN)를 18789(localhost)로 포워딩한 뒤 `openclaw gateway`를 시작합니다. `Ctrl+C`로 게이트웨이를 종료하면 socat도 자동으로 정리됩니다. 이 명령어는 `openclaw` 내장 명령어가 아니라, 이 프로젝트에서 제공하는 편의 명령어입니다.
 >

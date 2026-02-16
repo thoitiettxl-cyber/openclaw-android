@@ -145,24 +145,20 @@ oca-gateway
 
 > If you get `command not found`, run the [update command](#update) first.
 
-When the gateway starts, the script displays a PC-accessible URL like this:
+The script automatically detects your phone's IP and dashboard token, then displays a ready-to-use URL:
 
 ```
 ══════════════════════════════════════════════════
   PC Dashboard Access
 ══════════════════════════════════════════════════
 
-  After the gateway starts, look for the Dashboard URL
-  in the output below. Replace the URL like this:
+  Open this URL in your PC browser and bookmark it:
 
-  Before: http://127.0.0.1:18789/#token=YOUR_TOKEN
-  After:  http://192.168.0.100:18790/#token=YOUR_TOKEN
-
-  Open the After URL in your PC browser and bookmark it.
+  http://192.168.0.100:18790/#token=40db0363...
 ══════════════════════════════════════════════════
 ```
 
-Open the **After** URL in your PC browser and **bookmark it** for easy access. No SSH tunnel needed.
+Open this URL in your PC browser and **bookmark it** for easy access. No SSH tunnel needed.
 
 > `oca-gateway` (**O**pen**C**law on **A**ndroid) runs `socat` in the background to forward port 18790 (LAN) to 18789 (localhost), then starts `openclaw gateway`. When you stop the gateway with `Ctrl+C`, socat is automatically cleaned up. This is a convenience command provided by this project — not an `openclaw` built-in.
 >
