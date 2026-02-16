@@ -28,9 +28,10 @@ if ! command -v socat &>/dev/null; then
 fi
 
 # Get phone's Wi-Fi IP
+# Note: `ifconfig wlan0` fails in Termux (Permission denied), but `ifconfig` (all) works
 PHONE_IP=""
 if command -v ifconfig &>/dev/null; then
-    PHONE_IP=$(ifconfig wlan0 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1) || true
+    PHONE_IP=$(ifconfig 2>/dev/null | grep -A1 'wlan0' | grep 'inet ' | awk '{print $2}' | head -1) || true
 fi
 
 # Get dashboard URL (extract token from openclaw dashboard output)
