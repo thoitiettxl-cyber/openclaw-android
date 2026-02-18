@@ -36,6 +36,18 @@ The standard approach to running OpenClaw on Android requires installing proot-d
 - ~500MB free storage
 - Wi-Fi or mobile data connection
 
+## Bonus: AI CLI Tools on Your Phone
+
+The compatibility patches included in this project fix Termux's native build environment, enabling popular AI CLI tools to install and run:
+
+| Tool | Install |
+|------|---------|
+| [Claude Code](https://github.com/anthropics/claude-code) (Anthropic) | `npm i -g @anthropic-ai/claude-code` |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) (Google) | `npm i -g @google/gemini-cli` |
+| [Codex CLI](https://github.com/openai/codex) (OpenAI) | `npm i -g @openai/codex` |
+
+Install OpenClaw on Android first, then install any of these tools — the patches handle the rest.
+
 ## Step-by-Step Setup (from a fresh phone)
 
 1. [Enable Developer Options and Stay Awake](#step-1-enable-developer-options-and-stay-awake)
