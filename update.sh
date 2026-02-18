@@ -94,7 +94,10 @@ fi
 step 3 "Downloading Latest Scripts"
 
 # Download setup-env.sh (needed for .bashrc update)
-TMPFILE=$(mktemp "$PREFIX/tmp/setup-env.XXXXXX.sh")
+TMPFILE=$(mktemp "$PREFIX/tmp/setup-env.XXXXXX.sh") || {
+    echo -e "${RED}[FAIL]${NC} Failed to create temporary file (disk full or $PREFIX/tmp missing?)"
+    exit 1
+}
 if curl -sfL "$REPO_BASE/scripts/setup-env.sh" -o "$TMPFILE"; then
     echo -e "${GREEN}[OK]${NC}   setup-env.sh downloaded"
 else
@@ -112,7 +115,7 @@ else
 fi
 
 # Download termux-compat.h (native build compatibility)
-if curl -sfL "$REPO_BASE/patches/termux-compat.h" > "$OPENCLAW_DIR/patches/termux-compat.h"; then
+if curl -sfL "$REPO_BASE/patches/termux-compat.h" -o "$OPENCLAW_DIR/patches/termux-compat.h"; then
     echo -e "${GREEN}[OK]${NC}   termux-compat.h updated"
 else
     echo -e "${YELLOW}[WARN]${NC} Failed to download termux-compat.h (non-critical)"
@@ -138,7 +141,10 @@ else
 fi
 
 # Download build-sharp.sh
-SHARP_TMPFILE=$(mktemp "$PREFIX/tmp/build-sharp.XXXXXX.sh")
+SHARP_TMPFILE=$(mktemp "$PREFIX/tmp/build-sharp.XXXXXX.sh") || {
+    echo -e "${YELLOW}[WARN]${NC} Failed to create temporary file for build-sharp.sh (non-critical)"
+    SHARP_TMPFILE=""
+}
 if curl -sfL "$REPO_BASE/scripts/build-sharp.sh" -o "$SHARP_TMPFILE"; then
     echo -e "${GREEN}[OK]${NC}   build-sharp.sh downloaded"
 else
@@ -153,6 +159,16 @@ step 4 "Updating Environment Variables"
 # Run setup-env.sh to refresh .bashrc block
 bash "$TMPFILE"
 rm -f "$TMPFILE"
+
+# Re-export for current session (setup-env.sh runs as subprocess, exports don't propagate)
+export TMPDIR="$PREFIX/tmp"
+export TMP="$TMPDIR"
+export TEMP="$TMPDIR"
+export NODE_OPTIONS="-r $HOME/.openclaw-android/patches/bionic-compat.js"
+export CONTAINER=1
+export CXXFLAGS="-include $HOME/.openclaw-android/patches/termux-compat.h"
+export GYP_DEFINES="OS=linux android_ndk_path=$PREFIX"
+export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
 
 # ─────────────────────────────────────────────
 step 5 "Building sharp (image processing)"
