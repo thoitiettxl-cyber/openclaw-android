@@ -91,6 +91,14 @@ else
     exit 1
 fi
 
+# Download bionic-compat.js (patches may have been updated)
+mkdir -p "$OPENCLAW_DIR/patches"
+if curl -sfL "$REPO_BASE/patches/bionic-compat.js" -o "$OPENCLAW_DIR/patches/bionic-compat.js"; then
+    echo -e "${GREEN}[OK]${NC}   bionic-compat.js updated"
+else
+    echo -e "${YELLOW}[WARN]${NC} Failed to download bionic-compat.js (non-critical)"
+fi
+
 # Download update.sh itself for future use
 if curl -sfL "$REPO_BASE/update.sh" -o "$OPENCLAW_DIR/update.sh"; then
     chmod +x "$OPENCLAW_DIR/update.sh"
