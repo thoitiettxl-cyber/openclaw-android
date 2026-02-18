@@ -3,8 +3,9 @@
  *
  * Loaded via NODE_OPTIONS="-r <path>/bionic-compat.js"
  *
- * Wraps os.networkInterfaces() in a try-catch to prevent crashes
- * caused by Android Bionic's limited getifaddrs() implementation.
+ * Patches:
+ * - os.networkInterfaces(): try-catch wrapper for Bionic getifaddrs() crashes
+ * - os.cpus(): fallback for empty array (Android /proc/cpuinfo restriction)
  */
 
 'use strict';
@@ -20,6 +21,18 @@ Object.defineProperty(process, 'platform', {
 });
 
 const os = require('os');
+
+// os.cpus() returns empty array on some Android devices,
+// causing tools that use os.cpus().length for parallelism to fail (e.g. make -j0)
+const _originalCpus = os.cpus;
+
+os.cpus = function cpus() {
+  const result = _originalCpus.call(os);
+  if (result.length > 0) {
+    return result;
+  }
+  return [{ model: 'unknown', speed: 0, times: { user: 0, nice: 0, sys: 0, idle: 0, irq: 0 } }];
+};
 
 const _originalNetworkInterfaces = os.networkInterfaces;
 
