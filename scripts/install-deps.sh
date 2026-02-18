@@ -57,5 +57,14 @@ fi
 NPM_VER=$(npm -v)
 echo -e "${GREEN}[OK]${NC}   npm $NPM_VER installed"
 
+# Install PyYAML (required for .skill packaging)
+echo "Installing PyYAML..."
+if pip install pyyaml -q; then
+    echo -e "${GREEN}[OK]${NC}   PyYAML installed"
+else
+    echo -e "${RED}[FAIL]${NC} PyYAML installation failed"
+    exit 1
+fi
+
 echo ""
 echo -e "${GREEN}All dependencies installed.${NC}"

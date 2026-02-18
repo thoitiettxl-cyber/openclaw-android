@@ -78,6 +78,18 @@ else
     fi
 fi
 
+# Install PyYAML if not already installed (required for .skill packaging)
+if python -c "import yaml" 2>/dev/null; then
+    echo -e "${GREEN}[OK]${NC}   PyYAML already installed"
+else
+    echo "Installing PyYAML..."
+    if pip install pyyaml -q; then
+        echo -e "${GREEN}[OK]${NC}   PyYAML installed"
+    else
+        echo -e "${YELLOW}[WARN]${NC} Failed to install PyYAML (non-critical)"
+    fi
+fi
+
 # ─────────────────────────────────────────────
 step 3 "Downloading Latest Scripts"
 
