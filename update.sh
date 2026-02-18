@@ -99,6 +99,17 @@ else
     echo -e "${YELLOW}[WARN]${NC} Failed to download bionic-compat.js (non-critical)"
 fi
 
+# Install spawn.h stub if missing (needed for koffi/native module builds)
+if [ ! -f "$PREFIX/include/spawn.h" ]; then
+    if curl -sfL "$REPO_BASE/patches/spawn.h" -o "$PREFIX/include/spawn.h"; then
+        echo -e "${GREEN}[OK]${NC}   spawn.h stub installed"
+    else
+        echo -e "${YELLOW}[WARN]${NC} Failed to download spawn.h (non-critical)"
+    fi
+else
+    echo -e "${GREEN}[OK]${NC}   spawn.h already exists"
+fi
+
 # Download update.sh itself for future use
 if curl -sfL "$REPO_BASE/update.sh" -o "$OPENCLAW_DIR/update.sh"; then
     chmod +x "$OPENCLAW_DIR/update.sh"

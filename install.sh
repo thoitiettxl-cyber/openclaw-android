@@ -55,6 +55,14 @@ mkdir -p "$HOME/.openclaw-android/patches"
 cp "$SCRIPT_DIR/patches/bionic-compat.js" "$HOME/.openclaw-android/patches/bionic-compat.js"
 echo -e "${GREEN}[OK]${NC}   bionic-compat.js installed"
 
+# Install spawn.h stub if missing (needed for koffi/native module builds)
+if [ ! -f "$PREFIX/include/spawn.h" ]; then
+    cp "$SCRIPT_DIR/patches/spawn.h" "$PREFIX/include/spawn.h"
+    echo -e "${GREEN}[OK]${NC}   spawn.h stub installed"
+else
+    echo -e "${GREEN}[OK]${NC}   spawn.h already exists"
+fi
+
 # Copy update script
 cp "$SCRIPT_DIR/update.sh" "$HOME/.openclaw-android/update.sh"
 chmod +x "$HOME/.openclaw-android/update.sh"

@@ -31,6 +31,7 @@ FILES=(
     "patches/bionic-compat.js"
     "patches/patch-paths.sh"
     "patches/apply-patches.sh"
+    "patches/spawn.h"
     "scripts/check-env.sh"
     "scripts/install-deps.sh"
     "scripts/setup-paths.sh"
