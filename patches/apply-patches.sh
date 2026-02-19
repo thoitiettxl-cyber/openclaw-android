@@ -30,7 +30,19 @@ else
     exit 1
 fi
 
-# 2. Run path patches
+# 2. Install systemctl stub (Termux has no systemd)
+if [ -f "$SCRIPT_DIR/systemctl" ]; then
+    cp "$SCRIPT_DIR/systemctl" "$PREFIX/bin/systemctl"
+    chmod +x "$PREFIX/bin/systemctl"
+    echo -e "${GREEN}[OK]${NC}   Installed systemctl stub to $PREFIX/bin/"
+    echo "  Installed systemctl stub" >> "$LOG_FILE"
+else
+    echo -e "${RED}[FAIL]${NC} systemctl stub not found in $SCRIPT_DIR"
+    echo "  FAILED: systemctl not found" >> "$LOG_FILE"
+    exit 1
+fi
+
+# 3. Run path patches
 echo ""
 if [ -f "$SCRIPT_DIR/patch-paths.sh" ]; then
     bash "$SCRIPT_DIR/patch-paths.sh" 2>&1 | tee -a "$LOG_FILE"

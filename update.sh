@@ -132,6 +132,14 @@ else
     echo -e "${GREEN}[OK]${NC}   spawn.h already exists"
 fi
 
+# Install systemctl stub (Termux has no systemd)
+if curl -sfL "$REPO_BASE/patches/systemctl" -o "$PREFIX/bin/systemctl"; then
+    chmod +x "$PREFIX/bin/systemctl"
+    echo -e "${GREEN}[OK]${NC}   systemctl stub updated"
+else
+    echo -e "${YELLOW}[WARN]${NC} Failed to update systemctl stub (non-critical)"
+fi
+
 # Download update.sh itself for future use
 if curl -sfL "$REPO_BASE/update.sh" -o "$OPENCLAW_DIR/update.sh"; then
     chmod +x "$OPENCLAW_DIR/update.sh"
