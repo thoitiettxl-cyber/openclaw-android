@@ -105,11 +105,7 @@ pkg update -y && pkg install -y curl
 ### Step 4: Install OpenClaw
 
 > **Tip: Use SSH for easier typing**
-> From this step on, you can type commands from your computer keyboard instead of the phone screen.
-> Run the following on your phone first, then connect from your PC with `ssh -p 8022 <phone-ip>`:
-> ```
-> pkg install -y openssh && passwd && sshd
-> ```
+> From this step on, you can type commands from your computer keyboard instead of the phone screen. See the [Termux SSH Setup Guide](docs/termux-ssh-guide.md) for details.
 
 Paste the following command in Termux.
 
@@ -139,15 +135,23 @@ Once setup is complete, start the gateway:
 
 > **Important**: Run `openclaw gateway` directly in the Termux app on your phone, not via SSH. If you run it over SSH, the gateway will stop when the SSH session disconnects.
 
+The gateway occupies the terminal while running, so open a new tab for it. Tap the **hamburger icon (☰)** on the bottom menu bar, or swipe right from the left edge of the screen (above the bottom menu bar) to open the side menu. Then tap **NEW SESSION**.
+
+<img src="docs/images/termux_menu.png" width="300" alt="Termux side menu">
+
+In the new tab, run:
+
 ```bash
 openclaw gateway
 ```
+
+<img src="docs/images/termux_tab_1.png" width="300" alt="openclaw gateway running">
 
 > To stop the gateway, press `Ctrl+C`. Do not use `Ctrl+Z` — it only suspends the process without terminating it.
 
 ### Step 7: Access the Dashboard from Your PC
 
-To manage OpenClaw from your PC browser, you need to set up an SSH connection to your phone. See the [Termux SSH Setup Guide](docs/termux-ssh-guide.md) to configure SSH access first.
+To manage OpenClaw from your PC browser, you need to set up an SSH connection to your phone. See the [Termux SSH Setup Guide](docs/termux-ssh-guide.md) to configure SSH access first. Open another new tab on the phone for `sshd` (same method as Step 6).
 
 Once SSH is ready, find your phone's IP address. Run the following in Termux and look for the `inet` address under `wlan0` (e.g. `192.168.0.100`).
 

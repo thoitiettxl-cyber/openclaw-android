@@ -105,11 +105,7 @@ pkg update -y && pkg install -y curl
 ### 4단계: OpenClaw 설치
 
 > **팁: SSH로 편하게 입력하기**
-> 이 단계부터는 폰 화면 대신 컴퓨터 키보드로 명령어를 입력할 수 있습니다.
-> 폰에서 아래 명령어를 먼저 실행한 뒤, PC에서 `ssh -p 8022 <폰IP>`로 접속하세요:
-> ```
-> pkg install -y openssh && passwd && sshd
-> ```
+> 이 단계부터는 폰 화면 대신 컴퓨터 키보드로 명령어를 입력할 수 있습니다. [Termux SSH 접속 가이드](docs/termux-ssh-guide.ko.md)를 참고하세요.
 
 Termux에 아래 명령어를 붙여넣으세요.
 
@@ -139,15 +135,23 @@ openclaw onboard
 
 > **중요**: `openclaw gateway`는 SSH가 아닌, 폰의 Termux 앱에서 직접 실행하세요. SSH로 실행하면 SSH 연결이 끊어질 때 게이트웨이도 함께 종료됩니다.
 
+게이트웨이는 실행 중 터미널을 점유하므로, 별도 탭에서 실행하세요. 하단 메뉴바의 **햄버거 아이콘(☰)**을 탭하거나, 화면 왼쪽 가장자리에서 오른쪽으로 스와이프하면 (하단 메뉴바 위 영역) 사이드 메뉴가 나타납니다. **NEW SESSION**을 눌러 새 탭을 추가하세요.
+
+<img src="docs/images/termux_menu.png" width="300" alt="Termux 사이드 메뉴">
+
+새 탭에서 실행합니다:
+
 ```bash
 openclaw gateway
 ```
+
+<img src="docs/images/termux_tab_1.png" width="300" alt="openclaw gateway 실행 화면">
 
 > 게이트웨이를 중지하려면 `Ctrl+C`를 누르세요. `Ctrl+Z`는 프로세스를 종료하지 않고 일시 중지만 시키므로, 반드시 `Ctrl+C`를 사용하세요.
 
 ### 7단계: PC에서 대시보드 접속
 
-PC 브라우저에서 OpenClaw를 관리하려면 폰에 SSH 연결을 설정해야 합니다. 먼저 [Termux SSH 접속 가이드](docs/termux-ssh-guide.ko.md)를 참고하여 SSH를 설정하세요.
+PC 브라우저에서 OpenClaw를 관리하려면 폰에 SSH 연결을 설정해야 합니다. 먼저 [Termux SSH 접속 가이드](docs/termux-ssh-guide.ko.md)를 참고하여 SSH를 설정하세요. `sshd`도 별도 탭에서 실행합니다 (6단계와 같은 방법).
 
 SSH가 준비되면, 폰의 IP 주소를 확인합니다. Termux에서 다음을 실행하고 `wlan0` 항목의 `inet` 주소를 확인하세요 (예: `192.168.0.100`).
 
