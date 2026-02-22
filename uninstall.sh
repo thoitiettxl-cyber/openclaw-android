@@ -31,7 +31,15 @@ else
     echo -e "${YELLOW}[SKIP]${NC} openclaw not installed"
 fi
 
-# 2. Remove openclaw-android directory
+# 2. Remove oaupdate command
+if [ -f "$PREFIX/bin/oaupdate" ]; then
+    rm -f "$PREFIX/bin/oaupdate"
+    echo -e "${GREEN}[OK]${NC}   Removed $PREFIX/bin/oaupdate"
+else
+    echo -e "${YELLOW}[SKIP]${NC} $PREFIX/bin/oaupdate not found"
+fi
+
+# 3. Remove openclaw-android directory
 if [ -d "$HOME/.openclaw-android" ]; then
     rm -rf "$HOME/.openclaw-android"
     echo -e "${GREEN}[OK]${NC}   Removed $HOME/.openclaw-android"
@@ -39,7 +47,7 @@ else
     echo -e "${YELLOW}[SKIP]${NC} $HOME/.openclaw-android not found"
 fi
 
-# 3. Remove environment block from .bashrc
+# 4. Remove environment block from .bashrc
 BASHRC="$HOME/.bashrc"
 MARKER_START="# >>> OpenClaw on Android >>>"
 MARKER_END="# <<< OpenClaw on Android <<<"
@@ -53,13 +61,13 @@ else
     echo -e "${YELLOW}[SKIP]${NC} No environment block found in $BASHRC"
 fi
 
-# 4. Clean up temp directory
+# 5. Clean up temp directory
 if [ -d "$PREFIX/tmp/openclaw" ]; then
     rm -rf "$PREFIX/tmp/openclaw"
     echo -e "${GREEN}[OK]${NC}   Removed $PREFIX/tmp/openclaw"
 fi
 
-# 5. Optionally remove openclaw data
+# 6. Optionally remove openclaw data
 echo ""
 if [ -d "$HOME/.openclaw" ]; then
     read -rp "Remove OpenClaw data directory ($HOME/.openclaw)? [y/N] " REPLY

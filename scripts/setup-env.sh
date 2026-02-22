@@ -23,6 +23,7 @@ export TMP=\"\$TMPDIR\"
 export TEMP=\"\$TMPDIR\"
 export NODE_OPTIONS=\"-r $COMPAT_PATH\"
 export CONTAINER=1
+export CFLAGS=\"-Wno-error=implicit-function-declaration\"
 export CXXFLAGS=\"-include $COMPAT_HEADER\"
 export GYP_DEFINES=\"OS=linux android_ndk_path=\$PREFIX\"
 export CPATH=\"\$PREFIX/include/glib-2.0:\$PREFIX/lib/glib-2.0/include\"
@@ -51,6 +52,7 @@ echo "  TMP=\$TMPDIR"
 echo "  TEMP=\$TMPDIR"
 echo "  NODE_OPTIONS=\"-r $COMPAT_PATH\""
 echo "  CONTAINER=1  (suppresses systemd checks)"
+echo "  CFLAGS=\"-Wno-error=...\"  (Clang implicit-function-declaration fix)"
 echo "  CXXFLAGS=\"-include ...termux-compat.h\"  (native build fixes)"
 echo "  GYP_DEFINES=\"OS=linux ...\"  (node-gyp Android override)"
 echo "  CPATH=\"...glib-2.0...\"  (sharp header paths)"
@@ -61,9 +63,16 @@ export TMP="$TMPDIR"
 export TEMP="$TMPDIR"
 export NODE_OPTIONS="-r $COMPAT_PATH"
 export CONTAINER=1
+export CFLAGS="-Wno-error=implicit-function-declaration"
 export CXXFLAGS="-include $COMPAT_HEADER"
 export GYP_DEFINES="OS=linux android_ndk_path=$PREFIX"
 export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
+
+# Create ar symlink if missing (Termux provides llvm-ar but not ar)
+if [ ! -e "$PREFIX/bin/ar" ] && [ -x "$PREFIX/bin/llvm-ar" ]; then
+    ln -s "$PREFIX/bin/llvm-ar" "$PREFIX/bin/ar"
+    echo -e "${GREEN}[OK]${NC}   Created ar → llvm-ar symlink"
+fi
 
 echo ""
 echo -e "${GREEN}Environment setup complete.${NC}"

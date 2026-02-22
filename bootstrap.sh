@@ -73,10 +73,10 @@ echo ""
 bash "$INSTALL_DIR/install.sh"
 
 # Keep uninstall.sh accessible, clean up the rest
-# (update.sh is already installed by install.sh)
+# (oaupdate command is already installed by install.sh)
 cp "$INSTALL_DIR/uninstall.sh" "$HOME/.openclaw-android/uninstall.sh"
 chmod +x "$HOME/.openclaw-android/uninstall.sh"
 rm -rf "$INSTALL_DIR"
 
 echo "Uninstaller saved at: ~/.openclaw-android/uninstall.sh"
-echo "Updater saved at:     ~/.openclaw-android/update.sh"
+echo "To update later:      oaupdate && source ~/.bashrc"

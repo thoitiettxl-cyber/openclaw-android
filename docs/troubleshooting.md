@@ -131,7 +131,7 @@ The `NODE_OPTIONS` environment variable in `~/.bashrc` still references the old 
 Run the updater to refresh the environment variable block:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash && source ~/.bashrc
+oaupdate && source ~/.bashrc
 ```
 
 Or manually fix it:
@@ -188,10 +188,10 @@ After the update, manually rebuild `sharp` using the provided script:
 bash ~/.openclaw-android/scripts/build-sharp.sh
 ```
 
-Alternatively, use `update.sh` instead of `openclaw update` — it sets the required environment variables and rebuilds sharp automatically:
+Alternatively, use `oaupdate` instead of `openclaw update` — it sets the required environment variables and rebuilds sharp automatically:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash
+oaupdate && source ~/.bashrc
 ```
 
 ## "not supported on android" error

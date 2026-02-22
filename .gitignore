@@ -1,4 +1,5 @@
 .claude/
+.obsidian/
 CLAUDE.md
 .plan/
 node_modules/
@@ -6,3 +7,4 @@ node_modules/
 .DS_Store
 .idea/
 .issues
+

@@ -21,6 +21,7 @@ PACKAGES=(
     make
     cmake
     clang
+    binutils
     tmux
     ttyd
 )

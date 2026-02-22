@@ -1,226 +1,27 @@
 #!/usr/bin/env bash
-# update.sh - Lightweight updater for OpenClaw on Android (existing installations)
+# update.sh - Thin wrapper that downloads and runs update-core.sh
 # Usage: curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash
+#   or:  oaupdate  (after initial install)
 set -euo pipefail
 
 RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BOLD='\033[1m'
 NC='\033[0m'
 
 REPO_BASE="https://raw.githubusercontent.com/AidanPark/openclaw-android/main"
-OPENCLAW_DIR="$HOME/.openclaw-android"
 
-echo ""
-echo -e "${BOLD}========================================${NC}"
-echo -e "${BOLD}  OpenClaw on Android - Updater${NC}"
-echo -e "${BOLD}========================================${NC}"
-echo ""
-
-step() {
-    echo ""
-    echo -e "${BOLD}[$1/6] $2${NC}"
-    echo "----------------------------------------"
-}
-
-# ─────────────────────────────────────────────
-step 1 "Pre-flight Check"
-
-# Check Termux
-if [ -z "${PREFIX:-}" ]; then
-    echo -e "${RED}[FAIL]${NC} Not running in Termux (\$PREFIX not set)"
-    exit 1
-fi
-echo -e "${GREEN}[OK]${NC}   Termux detected"
-
-# Check existing OpenClaw installation
-if ! command -v openclaw &>/dev/null; then
-    echo -e "${RED}[FAIL]${NC} openclaw command not found"
-    echo "       Run the full installer first:"
-    echo "       curl -sL $REPO_BASE/bootstrap.sh | bash"
-    exit 1
-fi
-echo -e "${GREEN}[OK]${NC}   openclaw $(openclaw --version 2>/dev/null || echo "")"
-
-# Migrate from old directory name (.openclaw-lite → .openclaw-android)
-OLD_DIR="$HOME/.openclaw-lite"
-if [ -d "$OLD_DIR" ] && [ ! -d "$OPENCLAW_DIR" ]; then
-    mv "$OLD_DIR" "$OPENCLAW_DIR"
-    echo -e "${GREEN}[OK]${NC}   Migrated $OLD_DIR → $OPENCLAW_DIR"
-elif [ -d "$OLD_DIR" ] && [ -d "$OPENCLAW_DIR" ]; then
-    # Both exist — merge old into new, then remove old
-    cp -rn "$OLD_DIR"/. "$OPENCLAW_DIR"/ 2>/dev/null || true
-    rm -rf "$OLD_DIR"
-    echo -e "${GREEN}[OK]${NC}   Merged $OLD_DIR into $OPENCLAW_DIR"
-else
-    mkdir -p "$OPENCLAW_DIR"
-fi
-
-# Check curl
+# Ensure curl is available
 if ! command -v curl &>/dev/null; then
     echo -e "${RED}[FAIL]${NC} curl not found. Install it with: pkg install curl"
     exit 1
 fi
 
-# ─────────────────────────────────────────────
-step 2 "Installing New Packages"
-
-# Install ttyd if not already installed
-if command -v ttyd &>/dev/null; then
-    echo -e "${GREEN}[OK]${NC}   ttyd already installed ($(ttyd --version 2>/dev/null || echo ""))"
+# Download and execute update-core.sh
+TMPFILE=$(mktemp "${PREFIX:-/tmp}/tmp/update-core.XXXXXX.sh" 2>/dev/null) || TMPFILE=$(mktemp /tmp/update-core.XXXXXX.sh)
+if curl -sfL "$REPO_BASE/update-core.sh" -o "$TMPFILE"; then
+    bash "$TMPFILE"
+    rm -f "$TMPFILE"
 else
-    echo "Installing ttyd..."
-    if pkg install -y ttyd; then
-        echo -e "${GREEN}[OK]${NC}   ttyd installed"
-    else
-        echo -e "${YELLOW}[WARN]${NC} Failed to install ttyd (non-critical)"
-    fi
-fi
-
-# Install PyYAML if not already installed (required for .skill packaging)
-if python -c "import yaml" 2>/dev/null; then
-    echo -e "${GREEN}[OK]${NC}   PyYAML already installed"
-else
-    echo "Installing PyYAML..."
-    if pip install pyyaml -q; then
-        echo -e "${GREEN}[OK]${NC}   PyYAML installed"
-    else
-        echo -e "${YELLOW}[WARN]${NC} Failed to install PyYAML (non-critical)"
-    fi
-fi
-
-# ─────────────────────────────────────────────
-step 3 "Downloading Latest Scripts"
-
-# Download setup-env.sh (needed for .bashrc update)
-TMPFILE=$(mktemp "$PREFIX/tmp/setup-env.XXXXXX.sh") || {
-    echo -e "${RED}[FAIL]${NC} Failed to create temporary file (disk full or $PREFIX/tmp missing?)"
-    exit 1
-}
-if curl -sfL "$REPO_BASE/scripts/setup-env.sh" -o "$TMPFILE"; then
-    echo -e "${GREEN}[OK]${NC}   setup-env.sh downloaded"
-else
-    echo -e "${RED}[FAIL]${NC} Failed to download setup-env.sh"
+    echo -e "${RED}[FAIL]${NC} Failed to download update-core.sh"
     rm -f "$TMPFILE"
     exit 1
 fi
-
-# Download bionic-compat.js (patches may have been updated)
-mkdir -p "$OPENCLAW_DIR/patches"
-if curl -sfL "$REPO_BASE/patches/bionic-compat.js" -o "$OPENCLAW_DIR/patches/bionic-compat.js"; then
-    echo -e "${GREEN}[OK]${NC}   bionic-compat.js updated"
-else
-    echo -e "${YELLOW}[WARN]${NC} Failed to download bionic-compat.js (non-critical)"
-fi
-
-# Download termux-compat.h (native build compatibility)
-if curl -sfL "$REPO_BASE/patches/termux-compat.h" -o "$OPENCLAW_DIR/patches/termux-compat.h"; then
-    echo -e "${GREEN}[OK]${NC}   termux-compat.h updated"
-else
-    echo -e "${YELLOW}[WARN]${NC} Failed to download termux-compat.h (non-critical)"
-fi
-
-# Install spawn.h stub if missing (needed for koffi/native module builds)
-if [ ! -f "$PREFIX/include/spawn.h" ]; then
-    if curl -sfL "$REPO_BASE/patches/spawn.h" -o "$PREFIX/include/spawn.h"; then
-        echo -e "${GREEN}[OK]${NC}   spawn.h stub installed"
-    else
-        echo -e "${YELLOW}[WARN]${NC} Failed to download spawn.h (non-critical)"
-    fi
-else
-    echo -e "${GREEN}[OK]${NC}   spawn.h already exists"
-fi
-
-# Install systemctl stub (Termux has no systemd)
-if curl -sfL "$REPO_BASE/patches/systemctl" -o "$PREFIX/bin/systemctl"; then
-    chmod +x "$PREFIX/bin/systemctl"
-    echo -e "${GREEN}[OK]${NC}   systemctl stub updated"
-else
-    echo -e "${YELLOW}[WARN]${NC} Failed to update systemctl stub (non-critical)"
-fi
-
-# Download update.sh itself for future use
-if curl -sfL "$REPO_BASE/update.sh" -o "$OPENCLAW_DIR/update.sh"; then
-    chmod +x "$OPENCLAW_DIR/update.sh"
-    echo -e "${GREEN}[OK]${NC}   update.sh saved to $OPENCLAW_DIR/"
-else
-    echo -e "${YELLOW}[WARN]${NC} Failed to save update.sh (non-critical)"
-fi
-
-# Download build-sharp.sh
-SHARP_TMPFILE=""
-if SHARP_TMPFILE=$(mktemp "$PREFIX/tmp/build-sharp.XXXXXX.sh" 2>/dev/null); then
-    if curl -sfL "$REPO_BASE/scripts/build-sharp.sh" -o "$SHARP_TMPFILE"; then
-        echo -e "${GREEN}[OK]${NC}   build-sharp.sh downloaded"
-    else
-        echo -e "${YELLOW}[WARN]${NC} Failed to download build-sharp.sh (non-critical)"
-        rm -f "$SHARP_TMPFILE"
-        SHARP_TMPFILE=""
-    fi
-else
-    echo -e "${YELLOW}[WARN]${NC} Failed to create temporary file for build-sharp.sh (non-critical)"
-fi
-
-# ─────────────────────────────────────────────
-step 4 "Updating Environment Variables"
-
-# Run setup-env.sh to refresh .bashrc block
-bash "$TMPFILE"
-rm -f "$TMPFILE"
-
-# Re-export for current session (setup-env.sh runs as subprocess, exports don't propagate)
-export TMPDIR="$PREFIX/tmp"
-export TMP="$TMPDIR"
-export TEMP="$TMPDIR"
-export NODE_OPTIONS="-r $HOME/.openclaw-android/patches/bionic-compat.js"
-export CONTAINER=1
-export CXXFLAGS="-include $HOME/.openclaw-android/patches/termux-compat.h"
-export GYP_DEFINES="OS=linux android_ndk_path=$PREFIX"
-export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
-
-# ─────────────────────────────────────────────
-step 5 "Updating OpenClaw Package"
-
-# Install build dependencies required for sharp's native compilation.
-# This must happen before npm install so that libvips headers are
-# available when node-gyp compiles sharp as a dependency of openclaw.
-echo "Installing build dependencies..."
-if pkg install -y libvips binutils; then
-    echo -e "${GREEN}[OK]${NC}   libvips and binutils ready"
-else
-    echo -e "${YELLOW}[WARN]${NC} Failed to install build dependencies"
-    echo "       Image processing (sharp) may not compile correctly"
-fi
-
-# CXXFLAGS, GYP_DEFINES, and CPATH were exported in step 4.
-# npm runs as a child process of this script and inherits those
-# env vars, so sharp's node-gyp build succeeds here — unlike in
-# 'openclaw update', which spawns npm without these env vars set.
-echo "Updating openclaw npm package..."
-if npm install -g openclaw@latest --no-fund --no-audit; then
-    echo -e "${GREEN}[OK]${NC}   openclaw package updated"
-else
-    echo -e "${YELLOW}[WARN]${NC} Package update failed (non-critical)"
-    echo "       Retry manually: npm install -g openclaw@latest"
-fi
-
-# ─────────────────────────────────────────────
-step 6 "Building sharp (image processing)"
-
-if [ -n "$SHARP_TMPFILE" ]; then
-    bash "$SHARP_TMPFILE"
-    rm -f "$SHARP_TMPFILE"
-else
-    echo -e "${YELLOW}[SKIP]${NC} build-sharp.sh was not downloaded"
-fi
-
-echo ""
-echo -e "${BOLD}========================================${NC}"
-echo -e "${GREEN}${BOLD}  Update Complete!${NC}"
-echo -e "${BOLD}========================================${NC}"
-echo ""
-echo -e "${YELLOW}Run this to apply changes to the current session:${NC}"
-echo ""
-echo "  source ~/.bashrc"
-echo ""

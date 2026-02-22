@@ -45,6 +45,7 @@ export TMP="$TMPDIR"
 export TEMP="$TMPDIR"
 export NODE_OPTIONS="-r $HOME/.openclaw-android/patches/bionic-compat.js"
 export CONTAINER=1
+export CFLAGS="-Wno-error=implicit-function-declaration"
 export CXXFLAGS="-include $HOME/.openclaw-android/patches/termux-compat.h"
 export GYP_DEFINES="OS=linux android_ndk_path=$PREFIX"
 export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
@@ -69,10 +70,10 @@ else
     echo -e "${GREEN}[OK]${NC}   spawn.h already exists"
 fi
 
-# Copy update script
-cp "$SCRIPT_DIR/update.sh" "$HOME/.openclaw-android/update.sh"
-chmod +x "$HOME/.openclaw-android/update.sh"
-echo -e "${GREEN}[OK]${NC}   update.sh installed"
+# Install oaupdate command (update.sh wrapper → $PREFIX/bin/oaupdate)
+cp "$SCRIPT_DIR/update.sh" "$PREFIX/bin/oaupdate"
+chmod +x "$PREFIX/bin/oaupdate"
+echo -e "${GREEN}[OK]${NC}   oaupdate command installed"
 
 echo ""
 echo "Running: npm install -g openclaw@latest"
@@ -112,6 +113,6 @@ echo ""
 echo "Next step:"
 echo "  Run 'openclaw onboard' to start setup."
 echo ""
-echo "To update:    curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash"
+echo "To update:    oaupdate && source ~/.bashrc"
 echo "To uninstall: bash ~/.openclaw-android/uninstall.sh"
 echo ""

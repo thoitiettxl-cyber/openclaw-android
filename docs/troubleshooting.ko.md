@@ -131,7 +131,7 @@ Error: Cannot find module '/data/data/com.termux/files/home/.openclaw-lite/patch
 업데이터를 실행하면 환경변수 블록이 갱신됩니다:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash && source ~/.bashrc
+oaupdate && source ~/.bashrc
 ```
 
 또는 수동으로 수정:
@@ -188,10 +188,10 @@ Reason: global update
 bash ~/.openclaw-android/scripts/build-sharp.sh
 ```
 
-또는 `openclaw update` 대신 `update.sh`를 사용하면, 필요한 환경변수를 자동으로 설정하고 sharp 빌드까지 처리합니다:
+또는 `openclaw update` 대신 `oaupdate`를 사용하면, 필요한 환경변수를 자동으로 설정하고 sharp 빌드까지 처리합니다:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash
+oaupdate && source ~/.bashrc
 ```
 
 ## "not supported on android" 에러

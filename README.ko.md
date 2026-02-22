@@ -21,11 +21,11 @@
 
 ## 리눅스 설치 없이
 
-일반적으로 Android에서 OpenClaw를 실행하려면 proot-distro로 Ubuntu를 설치해야 하고, 700MB~1GB의 저장공간이 필요합니다. OpenClaw on Android는 호환성 문제를 직접 패치하여 순수 Termux 환경에서 OpenClaw를 실행할 수 있게 합니다.
+일반적으로 Android에서 OpenClaw를 실행하려면 proot-distro로 Linux를 설치해야 하고, 700MB~1GB의 저장공간이 필요합니다. OpenClaw on Android는 호환성 문제를 직접 패치하여 순수 Termux 환경에서 OpenClaw를 실행할 수 있게 합니다.
 
 | | 기존 방식 (proot-distro) | 이 프로젝트 |
 |---|---|---|
-| 저장공간 오버헤드 | 1-2GB (Ubuntu + 패키지) | ~50MB |
+| 저장공간 오버헤드 | 1-2GB (Linux + 패키지) | ~50MB |
 | 설치 시간 | 20-30분 | 3-10분 |
 | 성능 | 느림 (proot 레이어) | 네이티브 속도 |
 | 설정 과정 | 디스트로 설치, Linux 설정, Node.js 설치, 경로 수정... | 명령어 하나 실행 |
@@ -198,10 +198,15 @@ OpenClaw on Android를 먼저 설치한 후 위 도구를 설치하면 패치가
 이미 OpenClaw on Android가 설치되어 있고, 최신 패치와 환경 설정을 적용하고 싶다면:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash && source ~/.bashrc
+oaupdate && source ~/.bashrc
 ```
 
 전체 재설치 없이 환경변수와 패치만 갱신하는 경량 업데이터입니다. 여러 번 실행해도 안전합니다.
+
+> `oaupdate` 명령어가 없는 경우 (이전 설치 사용자), curl로 실행:
+> ```bash
+> curl -sL https://raw.githubusercontent.com/AidanPark/openclaw-android/main/update.sh | bash && source ~/.bashrc
+> ```
 
 ## 제거
 
@@ -240,7 +245,8 @@ OpenClaw 패키지, 패치, 환경변수, 임시 파일이 모두 제거됩니�
 openclaw-android/
 ├── bootstrap.sh                # curl | bash 원라이너 설치 (다운로더)
 ├── install.sh                  # 원클릭 설치 스크립트 (진입점)
-├── update.sh                   # 기존 설치 환경 경량 업데이터
+├── update.sh                   # Thin wrapper (update-core.sh 다운로드 후 실행)
+├── update-core.sh              # 기존 설치 환경 경량 업데이터
 ├── uninstall.sh                # 깔끔한 제거
 ├── patches/
 │   ├── bionic-compat.js        # 플랫폼 오버라이드 + os.networkInterfaces() + os.cpus() 패치
@@ -293,6 +299,7 @@ OpenClaw 빌드 및 실행에 필요한 Termux 패키지를 설치합니다.
 | `make` | 빌드 자동화 도구 | `node-gyp`가 생성한 Makefile을 실행하여 네이티브 모듈을 컴파일하는 데 사용. `python`과 함께 네이티브 빌드 파이프라인의 핵심 |
 | `cmake` | 크로스 플랫폼 빌드 시스템 | 일부 네이티브 모듈이 Makefile 대신 CMake 기반 빌드를 사용. 특히 암호화 관련 라이브러리(`argon2` 등)가 CMakeLists.txt를 포함하는 경우가 많음 |
 | `clang` | C/C++ 컴파일러 | Termux의 기본 C/C++ 컴파일러. `node-gyp`가 네이티브 모듈의 C/C++ 소스를 컴파일할 때 사용. Termux에서는 GCC 대신 Clang이 표준 |
+| `binutils` | 바이너리 유틸리티 (ar, strip 등) | 네이티브 모듈 빌드 시 정적 아카이브 생성에 필요한 `llvm-ar` 제공. 많은 빌드 시스템이 `ar` 명령을 기대하므로 `ar → llvm-ar` 심볼릭 링크도 생성 |
 | `tmux` | 터미널 멀티플렉서 | OpenClaw 서버를 백그라운드 세션에서 실행할 수 있게 해줌. Termux에서는 앱이 백그라운드로 가면 프로세스가 중단될 수 있으므로, tmux 세션 안에서 실행하면 안정적으로 유지 가능 |
 | `ttyd` | 웹 터미널 | 터미널을 웹으로 공유하는 도구. [My OpenClaw Hub](https://myopenclawhub.com)에서 브라우저 기반 터미널 접속을 제공하는 데 사용 |
 | `pyyaml` (pip) | Python용 YAML 파서 | OpenClaw의 `.skill` 패키징에 필요. Termux 패키지 설치 후 `pip install pyyaml`로 설치 |
@@ -319,9 +326,13 @@ Termux에서 필요한 디렉토리 구조를 생성합니다.
   - `TMP`, `TEMP` — `TMPDIR`과 동일 (일부 도구 호환용)
   - `NODE_OPTIONS="-r .../bionic-compat.js"` — 모든 Node 프로세스에 Bionic 호환 패치 자동 로드
   - `CONTAINER=1` — systemd 존재 여부 확인을 우회
+  - `CFLAGS="-Wno-error=implicit-function-declaration"` — Clang이 implicit function declaration을 에러로 처리하는 것을 방지 (GCC에서는 정상 빌드되지만 Clang의 엄격한 기본 설정에서 실패하는 `@discordjs/opus` 같은 네이티브 모듈 빌드에 필요)
   - `CXXFLAGS="-include .../termux-compat.h"` — 네이티브 모듈 빌드 시 C/C++ 호환 심 자동 포함
   - `GYP_DEFINES="OS=linux ..."` — node-gyp의 OS 감지를 Android에 맞게 오버라이드
   - `CPATH="...glib-2.0..."` — sharp 빌드에 필요한 glib 헤더 경로 제공
+- `ar → llvm-ar` 심볼릭 링크가 없으면 생성 (Termux는 `llvm-ar`만 제공하지만 많은 빌드 시스템이 `ar`을 기대함)
+
+`setup-env.sh` 실행 후, `install.sh`는 현재 프로세스에서 모든 환경변수를 다시 export합니다. `setup-env.sh`는 서브프로세스로 실행되므로 export가 부모 프로세스에 전달되지 않기 때문입니다. 이 재export를 통해 Step 5의 `npm install`이 올바른 빌드 환경(CFLAGS, CXXFLAGS, GYP_DEFINES 등)을 상속받습니다.
 
 ### [5/7] OpenClaw 설치 및 패치 — `npm install` + `patches/apply-patches.sh`
 
@@ -331,16 +342,18 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
    - `bionic-compat.js` — Node.js 런타임 패치 (npm install 과정에서도 필요)
    - `termux-compat.h` — C/C++ 빌드 호환 심 (renameat2 syscall 래퍼)
    - `spawn.h` → `$PREFIX/include/spawn.h` — POSIX spawn 스텁 헤더 (없는 경우 설치)
-2. `npm install -g openclaw@latest` 실행
-3. `patches/apply-patches.sh`가 패치를 일괄 적용:
+2. `update.sh` wrapper를 `$PREFIX/bin/oaupdate`에 설치 (간편 업데이트용)
+3. `npm install -g openclaw@latest` 실행
+4. `patches/apply-patches.sh`가 패치를 일괄 적용:
    - `bionic-compat.js` 최종 복사 확인
+   - `systemctl` 스텁을 `$PREFIX/bin/systemctl`에 설치 — Termux에는 systemd가 없으므로, systemd 서비스 관리 호출을 가로채는 최소한의 스크립트
    - `patches/patch-paths.sh` 실행 — 설치된 OpenClaw JS 파일 내 하드코딩된 경로를 sed로 치환:
      - `"/tmp"` / `'/tmp'` → `"$PREFIX/tmp"` / `'$PREFIX/tmp'`
      - `"/bin/sh"` → `"$PREFIX/bin/sh"`
      - `"/bin/bash"` → `"$PREFIX/bin/bash"`
      - `"/usr/bin/env"` → `"$PREFIX/bin/env"`
    - 패치 결과를 `~/.openclaw-android/patch.log`에 기록
-4. `scripts/build-sharp.sh`가 이미지 처리용 sharp 네이티브 모듈을 빌드 (비필수):
+5. `scripts/build-sharp.sh`가 이미지 처리용 sharp 네이티브 모듈을 빌드 (비필수):
    - `libvips`와 `binutils` 패키지 설치
    - `node-gyp` 글로벌 설치
    - Android/Termux 크로스 컴파일을 위한 `GYP_DEFINES`와 `CPATH` 설정
@@ -368,6 +381,59 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 ### [7/7] OpenClaw 업데이트
 
 `openclaw update`를 실행하여 최신 상태로 업데이트합니다. 완료 후 OpenClaw 버전을 출력하고 `openclaw onboard`로 설정을 시작하라는 안내를 표시합니다.
+
+## 경량 업데이터 흐름 — `oaupdate` / `update.sh`
+
+`oaupdate` (또는 `curl ... update.sh | bash`)를 실행하면 GitHub에서 `update-core.sh`를 다운로드하여 아래 6단계를 순서대로 실행합니다. 전체 설치와 달리 환경 체크, 경로 설정, 검증을 생략하고 — 패치, 환경변수, OpenClaw 패키지 갱신에만 집중합니다.
+
+### [1/6] 사전 점검
+
+업데이트를 위한 최소 조건을 확인합니다.
+
+- `$PREFIX` 존재 확인 (Termux 환경)
+- `openclaw` 명령 존재 확인 (이미 설치되어 있어야 함)
+- `curl` 사용 가능 여부 확인 (파일 다운로드에 필요)
+- 구버전 디렉토리 마이그레이션 (`.openclaw-lite` → `.openclaw-android` — 레거시 호환)
+
+### [2/6] 신규 패키지 설치
+
+초기 설치 이후 추가된 패키지를 보충 설치합니다.
+
+- `ttyd` — 브라우저 기반 터미널 접속을 위한 웹 터미널. 이미 설치되어 있으면 스킵
+- `PyYAML` — `.skill` 패키징용 YAML 파서. 이미 설치되어 있으면 스킵
+
+둘 다 비필수 — 실패 시 경고만 출력하고 업데이트를 중단하지 않습니다.
+
+### [3/6] 최신 스크립트 다운로드
+
+GitHub에서 최신 패치 파일과 스크립트를 다운로드합니다.
+
+| 파일 | 용도 | 실패 시 |
+|------|------|---------|
+| `setup-env.sh` | `.bashrc` 환경변수 블록 갱신 | **종료** (필수) |
+| `bionic-compat.js` | Node.js 런타임 호환 패치 | 경고 |
+| `termux-compat.h` | C/C++ 빌드 호환 헤더 | 경고 |
+| `spawn.h` | POSIX spawn 스텁 (이미 있으면 스킵) | 경고 |
+| `systemctl` | Termux용 systemd 스텁 | 경고 |
+| `update.sh` | `oaupdate` 명령어 설치/갱신 | 경고 |
+| `build-sharp.sh` | sharp 네이티브 모듈 빌드 스크립트 | 경고 |
+
+`setup-env.sh`만 필수 — 나머지는 모두 실패해도 비필수입니다.
+
+### [4/6] 환경변수 갱신
+
+다운로드한 `setup-env.sh`를 실행하여 `.bashrc` 환경변수 블록을 최신 내용으로 갱신합니다. 이후 현재 프로세스에서 모든 변수를 다시 export하여 Step 5의 `npm install`이 올바른 빌드 환경을 상속받도록 합니다.
+
+### [5/6] OpenClaw 패키지 업데이트
+
+- 빌드 의존성 설치: `libvips` (sharp용)와 `binutils` (네이티브 빌드용)
+- `ar → llvm-ar` 심볼릭 링크가 없으면 생성
+- `npm install -g openclaw@latest` 실행 — Step 4의 환경변수가 상속되어 네이티브 모듈(sharp, `@discordjs/opus` 등) 빌드가 정상 동작
+- 실패 시 경고만 출력하고 계속 진행
+
+### [6/6] sharp 빌드 (이미지 처리)
+
+`build-sharp.sh`를 실행하여 sharp 네이티브 모듈을 빌드합니다. Step 5의 `npm install`에서 이미 성공적으로 컴파일되었으면 이 단계에서 감지하고 rebuild를 건너뜁니다.
 
 </details>
 
