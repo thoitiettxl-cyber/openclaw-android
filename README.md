@@ -195,17 +195,27 @@ Install OpenClaw on Android first, then install any of these tools — the patch
   <img src="docs/images/run_codex.png" alt="Codex CLI on Termux" width="32%">
 </p>
 
+## CLI Reference
+
+After installation, the `oa` command is available for managing your installation:
+
+| Option | Description |
+|--------|-------------|
+| `oa --update` | Update OpenClaw and Android patches |
+| `oa --uninstall` | Remove OpenClaw on Android |
+| `oa --status` | Show installation status and diagnostics |
+| `oa --version` | Show version |
+| `oa --help` | Show available options |
+
 ## Update
 
-If you already have OpenClaw on Android installed and want to apply the latest patches and environment updates:
-
 ```bash
-oaupdate && source ~/.bashrc
+oa --update && source ~/.bashrc
 ```
 
 This single command updates both OpenClaw (`openclaw update`) and the Android compatibility patches from this project. Safe to run multiple times.
 
-> If the `oaupdate` command is not available (older installations), run it with curl:
+> If the `oa` command is not available (older installations), run it with curl:
 > ```bash
 > curl -sL myopenclawhub.com/update | bash && source ~/.bashrc
 > ```
@@ -213,7 +223,7 @@ This single command updates both OpenClaw (`openclaw update`) and the Android co
 ## Uninstall
 
 ```bash
-bash ~/.openclaw-android/uninstall.sh
+oa --uninstall
 ```
 
 This removes the OpenClaw package, patches, environment variables, and temp files. Your OpenClaw data (`~/.openclaw`) is optionally preserved.
@@ -247,6 +257,7 @@ However, **once the gateway is running, there's no difference**. The process sta
 openclaw-android/
 ├── bootstrap.sh                # curl | bash one-liner installer (downloader)
 ├── install.sh                  # One-click installer (entry point)
+├── oa.sh                       # Unified CLI (installed as $PREFIX/bin/oa)
 ├── update.sh                   # Thin wrapper (downloads and runs update-core.sh)
 ├── update-core.sh              # Lightweight updater for existing installations
 ├── uninstall.sh                # Clean removal
@@ -333,6 +344,7 @@ Adds an environment variable block to `~/.bashrc`.
   - `CXXFLAGS="-include .../termux-compat.h"` — Force-include C/C++ compatibility shim for native module builds
   - `GYP_DEFINES="OS=linux ..."` — Override node-gyp OS detection for Android
   - `CPATH="...glib-2.0..."` — Provide glib header paths for sharp builds
+  - `CLAWDHUB_WORKDIR="$HOME/.openclaw/workspace"` — Direct clawhub to install skills into OpenClaw's workspace instead of the default `~/skills/`
 - Creates an `ar → llvm-ar` symlink if missing (Termux provides `llvm-ar` but many build systems expect `ar`)
 
 After running `setup-env.sh`, `install.sh` re-exports all environment variables in the current process. Since `setup-env.sh` runs as a subprocess, its exports don't propagate to the parent. This re-export ensures Step 5's `npm install` inherits the correct build environment (CFLAGS, CXXFLAGS, GYP_DEFINES, etc.).
@@ -386,9 +398,9 @@ All items pass → PASSED. Any failure → FAILED with reinstall instructions.
 
 Runs `openclaw update` to ensure the latest version. On completion, displays the OpenClaw version and instructs the user to run `openclaw onboard` to start setup.
 
-## Lightweight Updater Flow — `oaupdate` / `update.sh`
+## Lightweight Updater Flow — `oa --update`
 
-Running `oaupdate` (or `curl ... update.sh | bash`) downloads `update-core.sh` from GitHub and executes the following 7 steps. Unlike the full installer, it skips environment checks, path setup, and verification — focusing only on refreshing patches, environment variables, and the OpenClaw package.
+Running `oa --update` (or `oaupdate` for backward compatibility) downloads `update-core.sh` from GitHub and executes the following 7 steps. Unlike the full installer, it skips environment checks, path setup, and verification — focusing only on refreshing patches, environment variables, and the OpenClaw package.
 
 ### [1/7] Pre-flight Check
 
@@ -420,7 +432,7 @@ Downloads the latest patch files and scripts from GitHub.
 | `termux-compat.h` | C/C++ build compatibility header | Warning |
 | `spawn.h` | POSIX spawn stub (skipped if exists) | Warning |
 | `systemctl` | systemd stub for Termux | Warning |
-| `update.sh` | Install/update `oaupdate` command | Warning |
+| `oa.sh` | Unified CLI (`oa` command) | Warning |
 | `build-sharp.sh` | sharp native module build script | Warning |
 
 Only `setup-env.sh` is required — all other failures are non-critical.
@@ -442,7 +454,8 @@ Installs or updates `clawhub`, the CLI tool for searching and installing OpenCla
 
 - If `clawhub` is not installed, installs it via `npm install -g clawdhub`
 - On Node.js v24+ in Termux, the `undici` package is not bundled with Node.js. If `undici` is missing, it's installed directly into clawhub's directory (`$(npm root -g)/clawdhub`)
-- Both operations are non-critical — failures print a warning but don't stop the update
+- Migrates skills from `~/skills/` to `~/.openclaw/workspace/skills/` if they were installed before `CLAWDHUB_WORKDIR` was configured. Existing skills at the correct location are preserved
+- All operations are non-critical — failures print a warning but don't stop the update
 
 ### [7/7] Building sharp (image processing)
 

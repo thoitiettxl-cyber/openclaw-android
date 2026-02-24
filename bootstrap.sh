@@ -41,6 +41,7 @@ FILES=(
     "scripts/build-sharp.sh"
     "tests/verify-install.sh"
     "update.sh"
+    "oa.sh"
 )
 
 # Download all files
@@ -73,10 +74,11 @@ echo ""
 bash "$INSTALL_DIR/install.sh"
 
 # Keep uninstall.sh accessible, clean up the rest
-# (oaupdate command is already installed by install.sh)
+# (oa and oaupdate commands are already installed by install.sh)
 cp "$INSTALL_DIR/uninstall.sh" "$HOME/.openclaw-android/uninstall.sh"
 chmod +x "$HOME/.openclaw-android/uninstall.sh"
 rm -rf "$INSTALL_DIR"
 
-echo "Uninstaller saved at: ~/.openclaw-android/uninstall.sh"
-echo "To update later:      oaupdate && source ~/.bashrc"
+echo "To update later:  oa --update && source ~/.bashrc"
+echo "To check status:  oa --status"
+echo "For help:         oa --help"
