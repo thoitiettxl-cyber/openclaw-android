@@ -194,6 +194,30 @@ Alternatively, use `oaupdate` instead of `openclaw update` — it sets the requi
 oaupdate && source ~/.bashrc
 ```
 
+## `clawhub` fails with "Cannot find package 'undici'"
+
+```
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'undici' imported from /data/data/com.termux/files/usr/lib/node_modules/clawdhub/dist/http.js
+```
+
+### Cause
+
+Node.js v24+ on Termux doesn't bundle the `undici` package, which `clawhub` depends on for HTTP requests.
+
+### Solution
+
+Run the updater to automatically install `clawhub` and its `undici` dependency:
+
+```bash
+oaupdate && source ~/.bashrc
+```
+
+Or fix it manually:
+
+```bash
+cd $(npm root -g)/clawdhub && npm install undici
+```
+
 ## "not supported on android" error
 
 ```

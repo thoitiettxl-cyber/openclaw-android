@@ -20,7 +20,7 @@ echo ""
 
 step() {
     echo ""
-    echo -e "${BOLD}[$1/6] $2${NC}"
+    echo -e "${BOLD}[$1/7] $2${NC}"
     echo "----------------------------------------"
 }
 
@@ -236,7 +236,34 @@ else
 fi
 
 # ─────────────────────────────────────────────
-step 6 "Building sharp (image processing)"
+step 6 "Updating clawhub (skill manager)"
+
+if command -v clawhub &>/dev/null; then
+    echo -e "${GREEN}[OK]${NC}   clawhub already installed"
+else
+    echo "Installing clawhub..."
+    if npm install -g clawdhub --no-fund --no-audit; then
+        echo -e "${GREEN}[OK]${NC}   clawhub installed"
+    else
+        echo -e "${YELLOW}[WARN]${NC} clawhub installation failed (non-critical)"
+    fi
+fi
+
+# Node.js v24+ on Termux doesn't bundle undici; clawhub needs it
+CLAWHUB_DIR="$(npm root -g)/clawdhub"
+if [ -d "$CLAWHUB_DIR" ] && ! node -e "require('undici')" 2>/dev/null; then
+    echo "Installing undici dependency for clawhub..."
+    if (cd "$CLAWHUB_DIR" && npm install undici --no-fund --no-audit); then
+        echo -e "${GREEN}[OK]${NC}   undici installed for clawhub"
+    else
+        echo -e "${YELLOW}[WARN]${NC} undici installation failed"
+    fi
+else
+    echo -e "${GREEN}[OK]${NC}   undici already available"
+fi
+
+# ─────────────────────────────────────────────
+step 7 "Building sharp (image processing)"
 
 if [ "$OPENCLAW_UPDATED" = false ]; then
     echo -e "${GREEN}[SKIP]${NC} openclaw unchanged — sharp rebuild not needed"

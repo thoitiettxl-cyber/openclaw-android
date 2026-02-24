@@ -91,6 +91,26 @@ npm install -g openclaw@latest
 echo ""
 echo -e "${GREEN}[OK]${NC}   OpenClaw installed"
 
+# Install clawhub (skill manager) and fix undici dependency
+echo ""
+echo "Installing clawhub (skill manager)..."
+if npm install -g clawdhub --no-fund --no-audit; then
+    echo -e "${GREEN}[OK]${NC}   clawhub installed"
+    # Node.js v24+ on Termux doesn't bundle undici; clawhub needs it
+    CLAWHUB_DIR="$(npm root -g)/clawdhub"
+    if [ -d "$CLAWHUB_DIR" ] && ! node -e "require('undici')" 2>/dev/null; then
+        echo "Installing undici dependency for clawhub..."
+        if (cd "$CLAWHUB_DIR" && npm install undici --no-fund --no-audit); then
+            echo -e "${GREEN}[OK]${NC}   undici installed for clawhub"
+        else
+            echo -e "${YELLOW}[WARN]${NC} undici installation failed (clawhub may not work)"
+        fi
+    fi
+else
+    echo -e "${YELLOW}[WARN]${NC} clawhub installation failed (non-critical)"
+    echo "       Retry manually: npm i -g clawdhub"
+fi
+
 # Apply path patches to installed modules
 echo ""
 bash "$SCRIPT_DIR/patches/apply-patches.sh"

@@ -347,7 +347,8 @@ Installs OpenClaw globally and applies Termux compatibility patches.
    - `spawn.h` → `$PREFIX/include/spawn.h` — POSIX spawn stub header (if missing)
 2. Installs `update.sh` wrapper as `$PREFIX/bin/oaupdate` for convenient updating
 3. Runs `npm install -g openclaw@latest`
-4. `patches/apply-patches.sh` applies all patches:
+4. Installs `clawhub` (skill manager) globally via `npm install -g clawdhub`. On Node.js v24+ in Termux, `undici` is not bundled — if missing, it's installed directly into clawhub's directory
+5. `patches/apply-patches.sh` applies all patches:
    - Verifies `bionic-compat.js` final copy
    - Installs `systemctl` stub to `$PREFIX/bin/systemctl` — a minimal script that intercepts systemd service management calls (which would fail in Termux since there is no systemd)
    - Runs `patches/patch-paths.sh` — uses sed to replace hardcoded paths in installed OpenClaw JS files:
@@ -356,7 +357,7 @@ Installs OpenClaw globally and applies Termux compatibility patches.
      - `"/bin/bash"` → `"$PREFIX/bin/bash"`
      - `"/usr/bin/env"` → `"$PREFIX/bin/env"`
    - Logs patch results to `~/.openclaw-android/patch.log`
-5. `scripts/build-sharp.sh` builds the sharp native module for image processing (non-critical):
+6. `scripts/build-sharp.sh` builds the sharp native module for image processing (non-critical):
    - Installs `libvips` and `binutils` packages
    - Installs `node-gyp` globally
    - Sets `GYP_DEFINES` and `CPATH` for Android/Termux cross-compilation
@@ -387,9 +388,9 @@ Runs `openclaw update` to ensure the latest version. On completion, displays the
 
 ## Lightweight Updater Flow — `oaupdate` / `update.sh`
 
-Running `oaupdate` (or `curl ... update.sh | bash`) downloads `update-core.sh` from GitHub and executes the following 6 steps. Unlike the full installer, it skips environment checks, path setup, and verification — focusing only on refreshing patches, environment variables, and the OpenClaw package.
+Running `oaupdate` (or `curl ... update.sh | bash`) downloads `update-core.sh` from GitHub and executes the following 7 steps. Unlike the full installer, it skips environment checks, path setup, and verification — focusing only on refreshing patches, environment variables, and the OpenClaw package.
 
-### [1/6] Pre-flight Check
+### [1/7] Pre-flight Check
 
 Validates the minimum conditions for updating.
 
@@ -398,7 +399,7 @@ Validates the minimum conditions for updating.
 - Checks `curl` is available (needed to download files)
 - Migrates old directory name if needed (`.openclaw-lite` → `.openclaw-android` — legacy compatibility)
 
-### [2/6] Installing New Packages
+### [2/7] Installing New Packages
 
 Installs packages that may have been added since the user's initial installation.
 
@@ -408,7 +409,7 @@ Installs packages that may have been added since the user's initial installation
 
 Both are non-critical — failures print a warning but don't stop the update.
 
-### [3/6] Downloading Latest Scripts
+### [3/7] Downloading Latest Scripts
 
 Downloads the latest patch files and scripts from GitHub.
 
@@ -424,18 +425,26 @@ Downloads the latest patch files and scripts from GitHub.
 
 Only `setup-env.sh` is required — all other failures are non-critical.
 
-### [4/6] Updating Environment Variables
+### [4/7] Updating Environment Variables
 
 Runs the downloaded `setup-env.sh` to refresh the `.bashrc` environment block with the latest variables. Then re-exports all variables in the current process so that Step 5's `npm install` inherits the correct build environment.
 
-### [5/6] Updating OpenClaw Package
+### [5/7] Updating OpenClaw Package
 
 - Installs build dependencies: `libvips` (for sharp) and `binutils` (for native builds)
 - Creates `ar → llvm-ar` symlink if missing
 - Runs `npm install -g openclaw@latest` — environment variables from Step 4 are inherited, enabling native modules (sharp, `@discordjs/opus`, etc.) to build correctly
 - On failure, prints a warning and continues
 
-### [6/6] Building sharp (image processing)
+### [6/7] Updating clawhub (skill manager)
+
+Installs or updates `clawhub`, the CLI tool for searching and installing OpenClaw skills.
+
+- If `clawhub` is not installed, installs it via `npm install -g clawdhub`
+- On Node.js v24+ in Termux, the `undici` package is not bundled with Node.js. If `undici` is missing, it's installed directly into clawhub's directory (`$(npm root -g)/clawdhub`)
+- Both operations are non-critical — failures print a warning but don't stop the update
+
+### [7/7] Building sharp (image processing)
 
 Runs `build-sharp.sh` to ensure the sharp native module is built. If sharp was already compiled successfully during Step 5's `npm install`, this step detects it and skips the rebuild.
 

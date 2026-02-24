@@ -347,7 +347,8 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
    - `spawn.h` → `$PREFIX/include/spawn.h` — POSIX spawn 스텁 헤더 (없는 경우 설치)
 2. `update.sh` wrapper를 `$PREFIX/bin/oaupdate`에 설치 (간편 업데이트용)
 3. `npm install -g openclaw@latest` 실행
-4. `patches/apply-patches.sh`가 패치를 일괄 적용:
+4. `clawhub` (스킬 매니저)를 `npm install -g clawdhub`로 글로벌 설치. Node.js v24+ Termux 환경에서는 `undici`가 번들되지 않으므로, 누락 시 clawhub 디렉토리에 직접 설치
+5. `patches/apply-patches.sh`가 패치를 일괄 적용:
    - `bionic-compat.js` 최종 복사 확인
    - `systemctl` 스텁을 `$PREFIX/bin/systemctl`에 설치 — Termux에는 systemd가 없으므로, systemd 서비스 관리 호출을 가로채는 최소한의 스크립트
    - `patches/patch-paths.sh` 실행 — 설치된 OpenClaw JS 파일 내 하드코딩된 경로를 sed로 치환:
@@ -356,7 +357,7 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
      - `"/bin/bash"` → `"$PREFIX/bin/bash"`
      - `"/usr/bin/env"` → `"$PREFIX/bin/env"`
    - 패치 결과를 `~/.openclaw-android/patch.log`에 기록
-5. `scripts/build-sharp.sh`가 이미지 처리용 sharp 네이티브 모듈을 빌드 (비필수):
+6. `scripts/build-sharp.sh`가 이미지 처리용 sharp 네이티브 모듈을 빌드 (비필수):
    - `libvips`와 `binutils` 패키지 설치
    - `node-gyp` 글로벌 설치
    - Android/Termux 크로스 컴파일을 위한 `GYP_DEFINES`와 `CPATH` 설정
@@ -387,9 +388,9 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 
 ## 경량 업데이터 흐름 — `oaupdate` / `update.sh`
 
-`oaupdate` (또는 `curl ... update.sh | bash`)를 실행하면 GitHub에서 `update-core.sh`를 다운로드하여 아래 6단계를 순서대로 실행합니다. 전체 설치와 달리 환경 체크, 경로 설정, 검증을 생략하고 — 패치, 환경변수, OpenClaw 패키지 갱신에만 집중합니다.
+`oaupdate` (또는 `curl ... update.sh | bash`)를 실행하면 GitHub에서 `update-core.sh`를 다운로드하여 아래 7단계를 순서대로 실행합니다. 전체 설치와 달리 환경 체크, 경로 설정, 검증을 생략하고 — 패치, 환경변수, OpenClaw 패키지 갱신에만 집중합니다.
 
-### [1/6] 사전 점검
+### [1/7] 사전 점검
 
 업데이트를 위한 최소 조건을 확인합니다.
 
@@ -398,7 +399,7 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 - `curl` 사용 가능 여부 확인 (파일 다운로드에 필요)
 - 구버전 디렉토리 마이그레이션 (`.openclaw-lite` → `.openclaw-android` — 레거시 호환)
 
-### [2/6] 신규 패키지 설치
+### [2/7] 신규 패키지 설치
 
 초기 설치 이후 추가된 패키지를 보충 설치합니다.
 
@@ -408,7 +409,7 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 
 둘 다 비필수 — 실패 시 경고만 출력하고 업데이트를 중단하지 않습니다.
 
-### [3/6] 최신 스크립트 다운로드
+### [3/7] 최신 스크립트 다운로드
 
 GitHub에서 최신 패치 파일과 스크립트를 다운로드합니다.
 
@@ -424,18 +425,26 @@ GitHub에서 최신 패치 파일과 스크립트를 다운로드합니다.
 
 `setup-env.sh`만 필수 — 나머지는 모두 실패해도 비필수입니다.
 
-### [4/6] 환경변수 갱신
+### [4/7] 환경변수 갱신
 
 다운로드한 `setup-env.sh`를 실행하여 `.bashrc` 환경변수 블록을 최신 내용으로 갱신합니다. 이후 현재 프로세스에서 모든 변수를 다시 export하여 Step 5의 `npm install`이 올바른 빌드 환경을 상속받도록 합니다.
 
-### [5/6] OpenClaw 패키지 업데이트
+### [5/7] OpenClaw 패키지 업데이트
 
 - 빌드 의존성 설치: `libvips` (sharp용)와 `binutils` (네이티브 빌드용)
 - `ar → llvm-ar` 심볼릭 링크가 없으면 생성
 - `npm install -g openclaw@latest` 실행 — Step 4의 환경변수가 상속되어 네이티브 모듈(sharp, `@discordjs/opus` 등) 빌드가 정상 동작
 - 실패 시 경고만 출력하고 계속 진행
 
-### [6/6] sharp 빌드 (이미지 처리)
+### [6/7] clawhub 설치/갱신 (스킬 매니저)
+
+OpenClaw 스킬을 검색하고 설치하는 CLI 도구인 `clawhub`를 설치하거나 갱신합니다.
+
+- `clawhub`가 설치되지 않은 경우 `npm install -g clawdhub`로 설치
+- Node.js v24+ Termux 환경에서는 `undici` 패키지가 Node.js에 번들되지 않음. `undici`가 누락된 경우 clawhub 디렉토리(`$(npm root -g)/clawdhub`)에 직접 설치
+- 둘 다 비필수 — 실패 시 경고만 출력하고 업데이트를 중단하지 않음
+
+### [7/7] sharp 빌드 (이미지 처리)
 
 `build-sharp.sh`를 실행하여 sharp 네이티브 모듈을 빌드합니다. Step 5의 `npm install`에서 이미 성공적으로 컴파일되었으면 이 단계에서 감지하고 rebuild를 건너뜁니다.
 
