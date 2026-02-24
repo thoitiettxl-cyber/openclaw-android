@@ -11,16 +11,17 @@ NC='\033[0m'
 
 REPO_BASE="https://raw.githubusercontent.com/AidanPark/openclaw-android/main"
 OPENCLAW_DIR="$HOME/.openclaw-android"
+OA_VERSION="0.8"
 
 echo ""
 echo -e "${BOLD}========================================${NC}"
-echo -e "${BOLD}  OpenClaw on Android - Updater${NC}"
+echo -e "${BOLD}  OpenClaw on Android - Updater v${OA_VERSION}${NC}"
 echo -e "${BOLD}========================================${NC}"
 echo ""
 
 step() {
     echo ""
-    echo -e "${BOLD}[$1/6] $2${NC}"
+    echo -e "${BOLD}[$1/7] $2${NC}"
     echo "----------------------------------------"
 }
 
@@ -186,13 +187,21 @@ else
     echo -e "${YELLOW}[WARN]${NC} Failed to update systemctl stub (non-critical)"
 fi
 
-# Download update.sh (thin wrapper) and install as oaupdate command
-if curl -sfL "$REPO_BASE/update.sh" -o "$PREFIX/bin/oaupdate"; then
-    chmod +x "$PREFIX/bin/oaupdate"
-    echo -e "${GREEN}[OK]${NC}   oaupdate command updated"
+# Download oa.sh (unified CLI) and install as oa command
+if curl -sfL "$REPO_BASE/oa.sh" -o "$PREFIX/bin/oa"; then
+    chmod +x "$PREFIX/bin/oa"
+    echo -e "${GREEN}[OK]${NC}   oa command updated"
 else
-    echo -e "${YELLOW}[WARN]${NC} Failed to update oaupdate (non-critical)"
+    echo -e "${YELLOW}[WARN]${NC} Failed to update oa command (non-critical)"
 fi
+
+# Install oaupdate as a thin wrapper that delegates to oa --update (backward compatibility)
+cat > "$PREFIX/bin/oaupdate" << 'WRAPPER'
+#!/usr/bin/env bash
+exec oa --update "$@"
+WRAPPER
+chmod +x "$PREFIX/bin/oaupdate"
+echo -e "${GREEN}[OK]${NC}   oaupdate command updated (→ oa --update)"
 
 # Download build-sharp.sh
 SHARP_TMPFILE=""
@@ -225,6 +234,7 @@ export CFLAGS="-Wno-error=implicit-function-declaration"
 export CXXFLAGS="-include $HOME/.openclaw-android/patches/termux-compat.h"
 export GYP_DEFINES="OS=linux android_ndk_path=$PREFIX"
 export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
+export CLAWDHUB_WORKDIR="$HOME/.openclaw/workspace"
 
 # ─────────────────────────────────────────────
 step 5 "Updating OpenClaw Package"
@@ -232,12 +242,16 @@ step 5 "Updating OpenClaw Package"
 # Install build dependencies required for sharp's native compilation.
 # This must happen before npm install so that libvips headers are
 # available when node-gyp compiles sharp as a dependency of openclaw.
-echo "Installing build dependencies..."
-if pkg install -y libvips binutils; then
-    echo -e "${GREEN}[OK]${NC}   libvips and binutils ready"
+if dpkg -s libvips &>/dev/null && dpkg -s binutils &>/dev/null; then
+    echo -e "${GREEN}[OK]${NC}   libvips and binutils already installed"
 else
-    echo -e "${YELLOW}[WARN]${NC} Failed to install build dependencies"
-    echo "       Image processing (sharp) may not compile correctly"
+    echo "Installing build dependencies..."
+    if pkg install -y libvips binutils; then
+        echo -e "${GREEN}[OK]${NC}   libvips and binutils ready"
+    else
+        echo -e "${YELLOW}[WARN]${NC} Failed to install build dependencies"
+        echo "       Image processing (sharp) may not compile correctly"
+    fi
 fi
 
 # Create ar symlink if missing (Termux provides llvm-ar but not ar)
@@ -270,11 +284,67 @@ else
 fi
 
 # ─────────────────────────────────────────────
-step 6 "Building sharp (image processing)"
+step 6 "Updating clawhub (skill manager)"
+
+if command -v clawhub &>/dev/null; then
+    echo -e "${GREEN}[OK]${NC}   clawhub already installed"
+else
+    echo "Installing clawhub..."
+    if npm install -g clawdhub --no-fund --no-audit; then
+        echo -e "${GREEN}[OK]${NC}   clawhub installed"
+    else
+        echo -e "${YELLOW}[WARN]${NC} clawhub installation failed (non-critical)"
+    fi
+fi
+
+# Node.js v24+ on Termux doesn't bundle undici; clawhub needs it
+CLAWHUB_DIR="$(npm root -g)/clawdhub"
+if [ -d "$CLAWHUB_DIR" ] && ! (cd "$CLAWHUB_DIR" && node -e "require('undici')" 2>/dev/null); then
+    echo "Installing undici dependency for clawhub..."
+    if (cd "$CLAWHUB_DIR" && npm install undici --no-fund --no-audit); then
+        echo -e "${GREEN}[OK]${NC}   undici installed for clawhub"
+    else
+        echo -e "${YELLOW}[WARN]${NC} undici installation failed"
+    fi
+else
+    echo -e "${GREEN}[OK]${NC}   undici already available"
+fi
+
+# Migrate skills installed to wrong path before CLAWDHUB_WORKDIR was set
+# Previous versions of clawhub defaulted to ~/skills/ instead of ~/.openclaw/workspace/skills/
+OLD_SKILLS_DIR="$HOME/skills"
+CORRECT_SKILLS_DIR="$HOME/.openclaw/workspace/skills"
+if [ -d "$OLD_SKILLS_DIR" ] && [ "$(ls -A "$OLD_SKILLS_DIR" 2>/dev/null)" ]; then
+    echo ""
+    echo "Migrating skills from ~/skills/ to ~/.openclaw/workspace/skills/..."
+    mkdir -p "$CORRECT_SKILLS_DIR"
+    for skill in "$OLD_SKILLS_DIR"/*/; do
+        [ -d "$skill" ] || continue
+        skill_name=$(basename "$skill")
+        if [ ! -d "$CORRECT_SKILLS_DIR/$skill_name" ]; then
+            if mv "$skill" "$CORRECT_SKILLS_DIR/$skill_name" 2>/dev/null; then
+                echo -e "  ${GREEN}[OK]${NC}   Migrated $skill_name"
+            else
+                echo -e "  ${YELLOW}[WARN]${NC} Failed to migrate $skill_name"
+            fi
+        else
+            echo -e "  ${YELLOW}[SKIP]${NC} $skill_name already exists in correct location"
+        fi
+    done
+    # Remove old directory if empty
+    if rmdir "$OLD_SKILLS_DIR" 2>/dev/null; then
+        echo -e "${GREEN}[OK]${NC}   Removed empty ~/skills/"
+    else
+        echo -e "${YELLOW}[WARN]${NC} ~/skills/ not empty after migration — check manually"
+    fi
+fi
+
+# ─────────────────────────────────────────────
+step 7 "Building sharp (image processing)"
 
 if [ "$OPENCLAW_UPDATED" = false ]; then
     echo -e "${GREEN}[SKIP]${NC} openclaw unchanged — sharp rebuild not needed"
-    rm -f "$SHARP_TMPFILE"
+    [ -n "$SHARP_TMPFILE" ] && rm -f "$SHARP_TMPFILE"
 elif [ -n "$SHARP_TMPFILE" ]; then
     bash "$SHARP_TMPFILE"
     rm -f "$SHARP_TMPFILE"
@@ -291,6 +361,12 @@ echo ""
 # Show OpenClaw update status
 openclaw update status 2>/dev/null || true
 
+echo ""
+echo -e "${BOLD}Manage with the 'oa' command:${NC}"
+echo "  oa --update       Update OpenClaw and patches"
+echo "  oa --status       Show installation status"
+echo "  oa --uninstall    Remove OpenClaw on Android"
+echo "  oa --help         Show all options"
 echo ""
 echo -e "${YELLOW}Run this to apply changes to the current session:${NC}"
 echo ""

@@ -27,6 +27,7 @@ export CFLAGS=\"-Wno-error=implicit-function-declaration\"
 export CXXFLAGS=\"-include $COMPAT_HEADER\"
 export GYP_DEFINES=\"OS=linux android_ndk_path=\$PREFIX\"
 export CPATH=\"\$PREFIX/include/glib-2.0:\$PREFIX/lib/glib-2.0/include\"
+export CLAWDHUB_WORKDIR=\"\$HOME/.openclaw/workspace\"
 ${MARKER_END}"
 
 # Create .bashrc if it doesn't exist
@@ -56,6 +57,7 @@ echo "  CFLAGS=\"-Wno-error=...\"  (Clang implicit-function-declaration fix)"
 echo "  CXXFLAGS=\"-include ...termux-compat.h\"  (native build fixes)"
 echo "  GYP_DEFINES=\"OS=linux ...\"  (node-gyp Android override)"
 echo "  CPATH=\"...glib-2.0...\"  (sharp header paths)"
+echo "  CLAWDHUB_WORKDIR=\"\$HOME/.openclaw/workspace\"  (clawhub skill install path)"
 
 # Source for current session
 export TMPDIR="$PREFIX/tmp"
@@ -67,6 +69,7 @@ export CFLAGS="-Wno-error=implicit-function-declaration"
 export CXXFLAGS="-include $COMPAT_HEADER"
 export GYP_DEFINES="OS=linux android_ndk_path=$PREFIX"
 export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
+export CLAWDHUB_WORKDIR="$HOME/.openclaw/workspace"
 
 # Create ar symlink if missing (Termux provides llvm-ar but not ar)
 if [ ! -e "$PREFIX/bin/ar" ] && [ -x "$PREFIX/bin/llvm-ar" ]; then

@@ -31,7 +31,14 @@ else
     echo -e "${YELLOW}[SKIP]${NC} openclaw not installed"
 fi
 
-# 2. Remove oaupdate command
+# 2. Remove oa and oaupdate commands
+if [ -f "$PREFIX/bin/oa" ]; then
+    rm -f "$PREFIX/bin/oa"
+    echo -e "${GREEN}[OK]${NC}   Removed $PREFIX/bin/oa"
+else
+    echo -e "${YELLOW}[SKIP]${NC} $PREFIX/bin/oa not found"
+fi
+
 if [ -f "$PREFIX/bin/oaupdate" ]; then
     rm -f "$PREFIX/bin/oaupdate"
     echo -e "${GREEN}[OK]${NC}   Removed $PREFIX/bin/oaupdate"

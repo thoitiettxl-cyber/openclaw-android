@@ -195,17 +195,27 @@ OpenClaw on Android를 먼저 설치한 후 위 도구를 설치하면 패치가
   <img src="docs/images/run_codex.png" alt="Codex CLI on Termux" width="32%">
 </p>
 
+## CLI 명령어
+
+설치 후 `oa` 명령어로 설치를 관리할 수 있습니다:
+
+| 옵션 | 설명 |
+|------|------|
+| `oa --update` | OpenClaw 및 Android 패치 업데이트 |
+| `oa --uninstall` | OpenClaw on Android 제거 |
+| `oa --status` | 설치 상태 및 진단 정보 표시 |
+| `oa --version` | 버전 표시 |
+| `oa --help` | 사용 가능한 옵션 표시 |
+
 ## 업데이트
 
-이미 OpenClaw on Android가 설치되어 있고, 최신 패치와 환경 설정을 적용하고 싶다면:
-
 ```bash
-oaupdate && source ~/.bashrc
+oa --update && source ~/.bashrc
 ```
 
 이 명령어 하나로 OpenClaw(`openclaw update`)와 이 프로젝트의 Android 호환 패치가 함께 업데이트됩니다. 여러 번 실행해도 안전합니다.
 
-> `oaupdate` 명령어가 없는 경우 (이전 설치 사용자), curl로 실행:
+> `oa` 명령어가 없는 경우 (이전 설치 사용자), curl로 실행:
 > ```bash
 > curl -sL myopenclawhub.com/update | bash && source ~/.bashrc
 > ```
@@ -213,7 +223,7 @@ oaupdate && source ~/.bashrc
 ## 제거
 
 ```bash
-bash ~/.openclaw-android/uninstall.sh
+oa --uninstall
 ```
 
 OpenClaw 패키지, 패치, 환경변수, 임시 파일이 모두 제거됩니다. OpenClaw 데이터(`~/.openclaw`)는 선택적으로 보존할 수 있습니다.
@@ -248,6 +258,7 @@ OpenClaw 패키지, 패치, 환경변수, 임시 파일이 모두 제거됩니�
 openclaw-android/
 ├── bootstrap.sh                # curl | bash 원라이너 설치 (다운로더)
 ├── install.sh                  # 원클릭 설치 스크립트 (진입점)
+├── oa.sh                       # 통합 CLI (설치 시 $PREFIX/bin/oa로 설치)
 ├── update.sh                   # Thin wrapper (update-core.sh 다운로드 후 실행)
 ├── update-core.sh              # 기존 설치 환경 경량 업데이터
 ├── uninstall.sh                # 깔끔한 제거
@@ -336,6 +347,7 @@ Termux에서 필요한 디렉토리 구조를 생성합니다.
   - `CXXFLAGS="-include .../termux-compat.h"` — 네이티브 모듈 빌드 시 C/C++ 호환 심 자동 포함
   - `GYP_DEFINES="OS=linux ..."` — node-gyp의 OS 감지를 Android에 맞게 오버라이드
   - `CPATH="...glib-2.0..."` — sharp 빌드에 필요한 glib 헤더 경로 제공
+  - `CLAWDHUB_WORKDIR="$HOME/.openclaw/workspace"` — clawhub가 스킬을 기본 경로(`~/skills/`) 대신 OpenClaw workspace에 설치하도록 지정
 - `ar → llvm-ar` 심볼릭 링크가 없으면 생성 (Termux는 `llvm-ar`만 제공하지만 많은 빌드 시스템이 `ar`을 기대함)
 
 `setup-env.sh` 실행 후, `install.sh`는 현재 프로세스에서 모든 환경변수를 다시 export합니다. `setup-env.sh`는 서브프로세스로 실행되므로 export가 부모 프로세스에 전달되지 않기 때문입니다. 이 재export를 통해 Step 5의 `npm install`이 올바른 빌드 환경(CFLAGS, CXXFLAGS, GYP_DEFINES 등)을 상속받습니다.
@@ -350,7 +362,8 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
    - `spawn.h` → `$PREFIX/include/spawn.h` — POSIX spawn 스텁 헤더 (없는 경우 설치)
 2. `update.sh` wrapper를 `$PREFIX/bin/oaupdate`에 설치 (간편 업데이트용)
 3. `npm install -g openclaw@latest` 실행
-4. `patches/apply-patches.sh`가 패치를 일괄 적용:
+4. `clawhub` (스킬 매니저)를 `npm install -g clawdhub`로 글로벌 설치. Node.js v24+ Termux 환경에서는 `undici`가 번들되지 않으므로, 누락 시 clawhub 디렉토리에 직접 설치
+5. `patches/apply-patches.sh`가 패치를 일괄 적용:
    - `bionic-compat.js` 최종 복사 확인
    - `systemctl` 스텁을 `$PREFIX/bin/systemctl`에 설치 — Termux에는 systemd가 없으므로, systemd 서비스 관리 호출을 가로채는 최소한의 스크립트
    - `patches/patch-paths.sh` 실행 — 설치된 OpenClaw JS 파일 내 하드코딩된 경로를 sed로 치환:
@@ -359,7 +372,7 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
      - `"/bin/bash"` → `"$PREFIX/bin/bash"`
      - `"/usr/bin/env"` → `"$PREFIX/bin/env"`
    - 패치 결과를 `~/.openclaw-android/patch.log`에 기록
-5. `scripts/build-sharp.sh`가 이미지 처리용 sharp 네이티브 모듈을 빌드 (비필수):
+6. `scripts/build-sharp.sh`가 이미지 처리용 sharp 네이티브 모듈을 빌드 (비필수):
    - `libvips`와 `binutils` 패키지 설치
    - `node-gyp` 글로벌 설치
    - Android/Termux 크로스 컴파일을 위한 `GYP_DEFINES`와 `CPATH` 설정
@@ -388,11 +401,11 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 
 `openclaw update`를 실행하여 최신 상태로 업데이트합니다. 완료 후 OpenClaw 버전을 출력하고 `openclaw onboard`로 설정을 시작하라는 안내를 표시합니다.
 
-## 경량 업데이터 흐름 — `oaupdate` / `update.sh`
+## 경량 업데이터 흐름 — `oa --update`
 
-`oaupdate` (또는 `curl ... update.sh | bash`)를 실행하면 GitHub에서 `update-core.sh`를 다운로드하여 아래 6단계를 순서대로 실행합니다. 전체 설치와 달리 환경 체크, 경로 설정, 검증을 생략하고 — 패치, 환경변수, OpenClaw 패키지 갱신에만 집중합니다.
+`oa --update` (또는 하위 호환을 위한 `oaupdate`)를 실행하면 GitHub에서 `update-core.sh`를 다운로드하여 아래 7단계를 순서대로 실행합니다. 전체 설치와 달리 환경 체크, 경로 설정, 검증을 생략하고 — 패치, 환경변수, OpenClaw 패키지 갱신에만 집중합니다.
 
-### [1/6] 사전 점검
+### [1/7] 사전 점검
 
 업데이트를 위한 최소 조건을 확인합니다.
 
@@ -402,7 +415,7 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 - 구버전 디렉토리 마이그레이션 (`.openclaw-lite` → `.openclaw-android` — 레거시 호환)
 - **Phantom Process Killer** (Android 12+): 전체 설치와 동일한 체크 — 활성화 상태면 경고와 ADB 비활성화 명령을 안내
 
-### [2/6] 신규 패키지 설치
+### [2/7] 신규 패키지 설치
 
 초기 설치 이후 추가된 패키지를 보충 설치합니다.
 
@@ -413,7 +426,7 @@ OpenClaw을 글로벌로 설치하고 Termux 호환 패치를 적용합니다.
 
 모두 비필수 — 실패 시 경고만 출력하고 업데이트를 중단하지 않습니다.
 
-### [3/6] 최신 스크립트 다운로드
+### [3/7] 최신 스크립트 다운로드
 
 GitHub에서 최신 패치 파일과 스크립트를 다운로드합니다.
 
@@ -424,23 +437,32 @@ GitHub에서 최신 패치 파일과 스크립트를 다운로드합니다.
 | `termux-compat.h` | C/C++ 빌드 호환 헤더 | 경고 |
 | `spawn.h` | POSIX spawn 스텁 (이미 있으면 스킵) | 경고 |
 | `systemctl` | Termux용 systemd 스텁 | 경고 |
-| `update.sh` | `oaupdate` 명령어 설치/갱신 | 경고 |
+| `oa.sh` | 통합 CLI (`oa` 명령어) | 경고 |
 | `build-sharp.sh` | sharp 네이티브 모듈 빌드 스크립트 | 경고 |
 
 `setup-env.sh`만 필수 — 나머지는 모두 실패해도 비필수입니다.
 
-### [4/6] 환경변수 갱신
+### [4/7] 환경변수 갱신
 
 다운로드한 `setup-env.sh`를 실행하여 `.bashrc` 환경변수 블록을 최신 내용으로 갱신합니다. 이후 현재 프로세스에서 모든 변수를 다시 export하여 Step 5의 `npm install`이 올바른 빌드 환경을 상속받도록 합니다.
 
-### [5/6] OpenClaw 패키지 업데이트
+### [5/7] OpenClaw 패키지 업데이트
 
 - 빌드 의존성 설치: `libvips` (sharp용)와 `binutils` (네이티브 빌드용)
 - `ar → llvm-ar` 심볼릭 링크가 없으면 생성
 - `npm install -g openclaw@latest` 실행 — Step 4의 환경변수가 상속되어 네이티브 모듈(sharp, `@discordjs/opus` 등) 빌드가 정상 동작
 - 실패 시 경고만 출력하고 계속 진행
 
-### [6/6] sharp 빌드 (이미지 처리)
+### [6/7] clawhub 설치/갱신 (스킬 매니저)
+
+OpenClaw 스킬을 검색하고 설치하는 CLI 도구인 `clawhub`를 설치하거나 갱신합니다.
+
+- `clawhub`가 설치되지 않은 경우 `npm install -g clawdhub`로 설치
+- Node.js v24+ Termux 환경에서는 `undici` 패키지가 Node.js에 번들되지 않음. `undici`가 누락된 경우 clawhub 디렉토리(`$(npm root -g)/clawdhub`)에 직접 설치
+- `CLAWDHUB_WORKDIR` 설정 전에 `~/skills/`에 설치된 스킬이 있으면 `~/.openclaw/workspace/skills/`로 자동 마이그레이션. 올바른 경로에 이미 존재하는 스킬은 보존
+- 모두 비필수 — 실패 시 경고만 출력하고 업데이트를 중단하지 않음
+
+### [7/7] sharp 빌드 (이미지 처리)
 
 `build-sharp.sh`를 실행하여 sharp 네이티브 모듈을 빌드합니다. Step 5의 `npm install`에서 이미 성공적으로 컴파일되었으면 이 단계에서 감지하고 rebuild를 건너뜁니다.
 
