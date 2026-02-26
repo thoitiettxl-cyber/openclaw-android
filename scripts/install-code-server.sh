@@ -153,13 +153,15 @@ fi
 
 if [ -n "$ARGON2_STUB" ]; then
     # Find argon2 module entry point in code-server
-    ARGON2_INDEX=$(find "$CS_DIR" -path "*/argon2/argon2.js" -type f 2>/dev/null | head -1 || true)
-    if [ -z "$ARGON2_INDEX" ]; then
-        ARGON2_INDEX=$(find "$CS_DIR" -path "*/node_modules/argon2/index.js" -type f 2>/dev/null | head -1 || true)
-    fi
+    # Entry point varies by version: argon2.cjs (v4.109+), argon2.js, or index.js
+    ARGON2_INDEX=""
+    for PATTERN in "*/argon2/argon2.cjs" "*/argon2/argon2.js" "*/node_modules/argon2/index.js"; do
+        ARGON2_INDEX=$(find "$CS_DIR" -path "$PATTERN" -type f 2>/dev/null | head -1 || true)
+        [ -n "$ARGON2_INDEX" ] && break
+    done
     if [ -n "$ARGON2_INDEX" ]; then
         cp "$ARGON2_STUB" "$ARGON2_INDEX"
-        echo -e "${GREEN}[OK]${NC}   Patched argon2 module with JS stub"
+        echo -e "${GREEN}[OK]${NC}   Patched argon2 module with JS stub ($(basename "$ARGON2_INDEX"))"
     else
         echo -e "${YELLOW}[WARN]${NC} argon2 module not found in code-server (may not be needed)"
     fi
